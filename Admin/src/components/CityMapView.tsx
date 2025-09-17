@@ -1,8 +1,6 @@
 import React from "react";
 import { Card } from "./ui/card";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 
 interface CityMapViewProps {
   onMarkerClick: (markerId: string) => void;
@@ -10,21 +8,19 @@ interface CityMapViewProps {
 
 const defaultCenter: [number, number] = [17.385, 78.4867];
 
-const issueMarkers = [
-  { id: "1", position: [17.385, 78.4867], title: "Pothole - High" },
-  { id: "2", position: [17.40, 78.49], title: "Street Light - Medium" },
-  { id: "3", position: [17.39, 78.47], title: "Graffiti - Low" },
-] as const;
+function SetViewOnMount({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap();
+  React.useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  return null;
+}
 
-const defaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
+const issueMarkers = [
+  { id: "1", position: [17.385, 78.4867] as [number, number], title: "Pothole - High" },
+  { id: "2", position: [17.40, 78.49] as [number, number], title: "Street Light - Medium" },
+  { id: "3", position: [17.39, 78.47] as [number, number], title: "Graffiti - Low" },
+];
 
 export function CityMapView({ onMarkerClick }: CityMapViewProps) {
   return (
@@ -33,13 +29,18 @@ export function CityMapView({ onMarkerClick }: CityMapViewProps) {
         <h3>City Issue Map</h3>
       </div>
       <div className="relative w-full h-full rounded-lg overflow-hidden">
-        <MapContainer center={defaultCenter} zoom={12} style={{ height: "100%", width: "100%" }}>
+        <MapContainer 
+          style={{ height: "100%", width: "100%" }}
+        >
+          <SetViewOnMount center={defaultCenter} zoom={12} />
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {issueMarkers.map(m => (
-            <Marker key={m.id} position={m.position as unknown as L.LatLngExpression} icon={defaultIcon} eventHandlers={{ click: () => onMarkerClick(m.id) }}>
+            <Marker 
+              key={m.id} 
+              position={m.position}
+            >
               <Popup>{m.title}</Popup>
             </Marker>
           ))}
