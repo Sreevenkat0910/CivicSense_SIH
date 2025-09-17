@@ -1,0 +1,64 @@
+/* CityMapView Background Styles */
+.map-background {
+  z-index: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+.map-background .leaflet-container {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.map-background .leaflet-map-pane {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.map-background .leaflet-tile-pane {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.map-background .leaflet-marker-pane {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.map-background .leaflet-popup-pane {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.map-background .leaflet-control-container {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.map-background .leaflet-zoom-control {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+.map-background .leaflet-attribution-control {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure all other elements have higher z-index */
+.card {
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+.notification-panel {
+  z-index: 10 !important;
+}
+
+.dropdown-menu {
+  z-index: 20 !important;
+}
+
+.modal {
+  z-index: 30 !important;
+}

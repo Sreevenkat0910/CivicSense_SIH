@@ -30,7 +30,16 @@ export function CityMapView({ onMarkerClick }: CityMapViewProps) {
       </div>
       <div className="relative w-full h-full rounded-lg overflow-hidden">
         <MapContainer 
-          style={{ height: "100%", width: "100%" }}
+          className="map-background"
+          style={{ 
+            height: "100%", 
+            width: "100%",
+            zIndex: 0,
+            position: "absolute",
+            top: 0,
+            left: 0,
+            pointerEvents: "none"
+          }}
         >
           <SetViewOnMount center={defaultCenter} zoom={12} />
           <TileLayer
