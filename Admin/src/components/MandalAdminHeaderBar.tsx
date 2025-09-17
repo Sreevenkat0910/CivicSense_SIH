@@ -2,14 +2,6 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Bell, Search, User, LogOut, Settings, Shield } from "lucide-react";
 import { Input } from "./ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
 
 interface MandalAdminHeaderBarProps {
   onNotificationsClick: () => void;
@@ -70,47 +62,22 @@ export function MandalAdminHeaderBar({
             )}
           </Button>
           
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-white" />
-                </div>
-                <div className="hidden md:block text-left">
-                  <p className="text-sm">{userName}</p>
-                  <p className="text-xs text-muted-foreground">Mandal Administrator</p>
-                </div>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div>
-                  <p>{userName}</p>
-                  <p className="text-xs text-muted-foreground">Mandal Administrator</p>
-                  <p className="text-xs text-muted-foreground">{mandalName} Mandal</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="w-4 h-4 mr-2" />
-                Profile Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="w-4 h-4 mr-2" />
-                System Preferences
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell className="w-4 h-4 mr-2" />
-                Notification Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogout} className="text-red-600">
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Profile + explicit Logout button */}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                <Shield className="w-4 h-4 text-white" />
+              </div>
+              <div className="hidden md:block text-left">
+                <p className="text-sm">{userName}</p>
+                <p className="text-xs text-muted-foreground">Mandal Administrator</p>
+              </div>
+            </Button>
+            <Button variant="outline" size="sm" onClick={onLogout} className="gap-2">
+              <LogOut className="w-4 h-4" />
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
     </div>

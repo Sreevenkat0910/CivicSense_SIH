@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Badge } from "./ui/badge";
-import { Building2, Shield, User } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 interface LoginPageProps {
   onLogin: (userRole: "admin" | "department" | "mandal-admin", department?: string, userName?: string, mandalName?: string) => void;
@@ -13,36 +13,31 @@ interface LoginPageProps {
 export function LoginPage({ onLogin }: LoginPageProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedRole, setSelectedRole] = useState<"admin" | "department" | "mandal-admin">("admin");
-  const [selectedDepartment, setSelectedDepartment] = useState("Public Works");
-  const [selectedMandal, setSelectedMandal] = useState("Karimnagar");
+  const [selectedAccess, setSelectedAccess] = useState<"admin" | "mandal-admin">("admin");
 
-  const departments = [
-    "Public Works",
-    "Utilities", 
-    "Parks & Recreation",
-    "Traffic Department",
-    "Water Department",
-    "Code Enforcement",
-    "Police Department"
-  ];
-
-  const mandals = [
-    "Karimnagar",
-    "Warangal",
-    "Nizamabad",
-    "Medak",
-    "Khammam",
-    "Mahbubnagar"
+  // Simple demo user directory (replace with real API later)
+  const demoUsers = [
+    { username: "admin", password: "admin", role: "admin" as const, name: "John Doe" },
+    { username: "public", password: "public", role: "department" as const, department: "Public Works", name: "Priya Singh" },
+    { username: "water", password: "water", role: "department" as const, department: "Water Department", name: "Mike Chen" },
+    { username: "mandal", password: "mandal", role: "mandal-admin" as const, mandal: "Karimnagar", name: "Rajesh Kumar" },
   ];
 
   const handleLogin = () => {
-    if (selectedRole === "admin") {
-      onLogin("admin", undefined, "John Doe");
-    } else if (selectedRole === "department") {
-      onLogin("department", selectedDepartment, "Mike Chen");
+    const user = demoUsers
+      .filter(u => (selectedAccess === "admin" ? u.role === "admin" : u.role === "mandal-admin"))
+      .find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+    if (!user) {
+      alert("Invalid credentials for selected access. Try admin/admin or mandal/mandal");
+      return;
+    }
+
+    if (user.role === "admin") {
+      onLogin("admin", undefined, user.name);
+    } else if (user.role === "department") {
+      onLogin("department", user.department, user.name);
     } else {
-      onLogin("mandal-admin", undefined, "Rajesh Kumar", selectedMandal);
+      onLogin("mandal-admin", undefined, user.name, user.mandal);
     }
   };
 
@@ -60,74 +55,20 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         </div>
 
         <div className="space-y-6">
-          {/* Role Selection */}
+
+          {/* Access Level */}
           <div>
             <label className="block mb-3">Access Level</label>
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant={selectedRole === "admin" ? "default" : "outline"}
-                onClick={() => setSelectedRole("admin")}
-                className="flex flex-col gap-1 h-auto py-3 text-xs"
-              >
-                <Shield className="w-4 h-4" />
-                <span>Admin</span>
-              </Button>
-              <Button
-                variant={selectedRole === "department" ? "default" : "outline"}
-                onClick={() => setSelectedRole("department")}
-                className="flex flex-col gap-1 h-auto py-3 text-xs"
-              >
-                <User className="w-4 h-4" />
-                <span>Department</span>
-              </Button>
-              <Button
-                variant={selectedRole === "mandal-admin" ? "default" : "outline"}
-                onClick={() => setSelectedRole("mandal-admin")}
-                className="flex flex-col gap-1 h-auto py-3 text-xs"
-              >
-                <Building2 className="w-4 h-4" />
-                <span>Mandal Admin</span>
-              </Button>
-            </div>
+            <Select value={selectedAccess} onValueChange={(v: "admin" | "mandal-admin") => setSelectedAccess(v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select access" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="mandal-admin">Mandal Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-
-          {/* Department Selection for Department Users */}
-          {selectedRole === "department" && (
-            <div>
-              <label className="block mb-3">Department</label>
-              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map(dept => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Mandal Selection for Mandal Admins */}
-          {selectedRole === "mandal-admin" && (
-            <div>
-              <label className="block mb-3">Mandal</label>
-              <Select value={selectedMandal} onValueChange={setSelectedMandal}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {mandals.map(mandal => (
-                    <SelectItem key={mandal} value={mandal}>
-                      {mandal}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           {/* Username */}
           <div>
@@ -165,22 +106,16 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <p className="text-sm text-muted-foreground mb-3">Demo Accounts</p>
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                  Admin
-                </Badge>
-                <span className="text-muted-foreground">Full system access</span>
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700">Admin</Badge>
+                <span className="text-muted-foreground">admin / admin</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <Badge variant="secondary" className="bg-green-50 text-green-700">
-                  Department
-                </Badge>
-                <span className="text-muted-foreground">Department-specific access</span>
+                <Badge variant="secondary" className="bg-green-50 text-green-700">Department</Badge>
+                <span className="text-muted-foreground">public / public, water / water</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <Badge variant="secondary" className="bg-purple-50 text-purple-700">
-                  Mandal Admin
-                </Badge>
-                <span className="text-muted-foreground">Government administration</span>
+                <Badge variant="secondary" className="bg-purple-50 text-purple-700">Mandal Admin</Badge>
+                <span className="text-muted-foreground">mandal / mandal</span>
               </div>
             </div>
           </div>

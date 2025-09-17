@@ -1,15 +1,17 @@
 import React from "react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, LogOut } from "lucide-react";
 import { Input } from "./ui/input";
 
 interface HeaderBarProps {
   onNotificationsClick: () => void;
   notificationCount?: number;
+  userName?: string;
+  onLogout?: () => void;
 }
 
-export function HeaderBar({ onNotificationsClick, notificationCount = 0 }: HeaderBarProps) {
+export function HeaderBar({ onNotificationsClick, notificationCount = 0, userName = "John Doe", onLogout }: HeaderBarProps) {
   return (
     <div className="border-b bg-background px-6 py-4">
       <div className="flex items-center justify-between">
@@ -46,13 +48,21 @@ export function HeaderBar({ onNotificationsClick, notificationCount = 0 }: Heade
             )}
           </Button>
           
-          {/* User Menu */}
-          <Button variant="ghost" size="sm" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="hidden md:block">John Doe</span>
-          </Button>
+          {/* Profile + explicit Logout button */}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <span className="hidden md:block">{userName}</span>
+            </Button>
+            {onLogout && (
+              <Button variant="outline" size="sm" onClick={onLogout} className="gap-2">
+                <LogOut className="w-4 h-4" />
+                Logout
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

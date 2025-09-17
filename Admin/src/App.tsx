@@ -216,6 +216,8 @@ export default function App() {
           <HeaderBar 
             onNotificationsClick={() => setIsNotificationsOpen(true)}
             notificationCount={2}
+            userName={userName}
+            onLogout={handleLogout}
           />
         );
     }
