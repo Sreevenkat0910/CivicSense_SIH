@@ -1,12 +1,9 @@
-import Counter from '../models/Counter.js';
+import { supabase } from '../lib/supabase.js';
 
 export async function nextSequence(key) {
-  const doc = await Counter.findOneAndUpdate(
-    { key },
-    { $inc: { seq: 1 } },
-    { new: true, upsert: true }
-  );
-  return doc.seq;
+  const { data, error } = await supabase.rpc('next_seq', { counter_key: key });
+  if (error) throw new Error(`next_seq failed: ${error.message}`);
+  return data;
 }
 
 export async function generateUserId() {

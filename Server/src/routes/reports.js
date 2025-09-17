@@ -1,6 +1,5 @@
 import express from 'express';
-import Report from '../models/Report.js';
-import User from '../models/User.js';
+import { supabase } from '../lib/supabase.js';
 import { generateReportId } from '../utils/id.js';
 
 const router = express.Router();
@@ -28,26 +27,26 @@ router.post('/', async (req, res) => {
     const departmentCode = department.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4) || 'GEN';
     const reportId = await generateReportId(departmentCode);
 
-    let reportedBy = undefined;
-    if (reporterEmail) {
-      const reporter = await User.findOne({ email: reporterEmail });
-      if (reporter) reportedBy = reporter._id;
-    }
+    const { data, error } = await supabase
+      .from('reports')
+      .insert({
+        report_id: reportId,
+        title,
+        category,
+        description,
+        location_text: locationText,
+        latitude,
+        longitude,
+        photos,
+        voice_note_url: voiceNoteUrl,
+        department,
+        reporter_email: reporterEmail || null,
+      })
+      .select('id, report_id')
+      .single();
+    if (error) return res.status(500).json({ error: error.message });
 
-    const report = await Report.create({
-      reportId,
-      title,
-      category,
-      description,
-      locationText,
-      location: latitude && longitude ? { type: 'Point', coordinates: [longitude, latitude] } : undefined,
-      photos,
-      voiceNoteUrl,
-      department,
-      reportedBy,
-    });
-
-    return res.status(201).json({ reportId: report.reportId, _id: report._id });
+    return res.status(201).json({ reportId: data.report_id, id: data.id });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Internal server error' });
