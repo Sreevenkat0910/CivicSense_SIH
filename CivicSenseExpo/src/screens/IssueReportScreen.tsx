@@ -62,6 +62,8 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
 
   const [isRecording, setIsRecording] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showPhotoPreview, setShowPhotoPreview] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<PhotoObject | null>(null);
 
   // Animation values
   const headerTranslateY = useSharedValue(-50);
@@ -137,14 +139,9 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
           size: asset.fileSize || 0,
         };
         
-        const newPhotos = [...formData.photos, photoObject].slice(0, 3);
-        setFormData(prev => ({ ...prev, photos: newPhotos }));
-        
-        // Photo added animation
-        photoScale.value = withSequence(
-          withTiming(1.1, { duration: 200 }),
-          withTiming(1, { duration: 200 })
-        );
+        // Show preview modal instead of directly adding
+        setPreviewPhoto(photoObject);
+        setShowPhotoPreview(true);
       }
     });
   };
@@ -169,14 +166,11 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
           size: asset.fileSize || 0,
         }));
         
-        const newPhotos = [...formData.photos, ...photoObjects].slice(0, 3);
-        setFormData(prev => ({ ...prev, photos: newPhotos }));
-        
-        // Photo added animation
-        photoScale.value = withSequence(
-          withTiming(1.1, { duration: 200 }),
-          withTiming(1, { duration: 200 })
-        );
+        // Show preview modal for the first selected photo
+        if (photoObjects.length > 0) {
+          setPreviewPhoto(photoObjects[0]);
+          setShowPhotoPreview(true);
+        }
       }
     });
   };
@@ -186,6 +180,26 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index)
     }));
+  };
+
+  const confirmPhoto = () => {
+    if (previewPhoto) {
+      const newPhotos = [...formData.photos, previewPhoto].slice(0, 3);
+      setFormData(prev => ({ ...prev, photos: newPhotos }));
+      
+      // Photo added animation
+      photoScale.value = withSequence(
+        withTiming(1.1, { duration: 200 }),
+        withTiming(1, { duration: 200 })
+      );
+    }
+    setShowPhotoPreview(false);
+    setPreviewPhoto(null);
+  };
+
+  const discardPhoto = () => {
+    setShowPhotoPreview(false);
+    setPreviewPhoto(null);
   };
 
   const handleVoiceRecord = () => {
@@ -385,6 +399,14 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
         categories={categories}
         selectedCategory={formData.category}
         onSelect={handleCategorySelect}
+      />
+
+      {/* Photo Preview Modal */}
+      <PhotoPreviewModal
+        visible={showPhotoPreview}
+        photo={previewPhoto}
+        onConfirm={confirmPhoto}
+        onDiscard={discardPhoto}
       />
     </LinearGradient>
   );
@@ -690,6 +712,76 @@ const AnimatedCategoryModal = ({ visible, onClose, categories, selectedCategory,
   );
 };
 
+// Photo Preview Modal Component
+const PhotoPreviewModal = ({ visible, photo, onConfirm, onDiscard }: {
+  visible: boolean;
+  photo: PhotoObject | null;
+  onConfirm: () => void;
+  onDiscard: () => void;
+}) => {
+  const scale = useSharedValue(0);
+  const opacity = useSharedValue(0);
+
+  React.useEffect(() => {
+    if (visible) {
+      scale.value = withSpring(1, { damping: 15, stiffness: 150 });
+      opacity.value = withTiming(1, { duration: 300 });
+    } else {
+      scale.value = withTiming(0, { duration: 200 });
+      opacity.value = withTiming(0, { duration: 200 });
+    }
+  }, [visible]);
+
+  const modalAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  const contentAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  if (!photo) return null;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={onDiscard}
+    >
+      <Animated.View style={[styles.modalOverlay, modalAnimatedStyle]}>
+        <Animated.View style={[styles.photoPreviewContainer, contentAnimatedStyle]}>
+          <View style={styles.photoPreviewHeader}>
+            <Text style={styles.photoPreviewTitle}>Preview Photo</Text>
+            <TouchableOpacity onPress={onDiscard} style={styles.closeButton}>
+              <Icon name="close" size={24} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.photoPreviewContent}>
+            <Image source={{ uri: photo.url }} style={styles.previewImage} />
+            <Text style={styles.photoInfo}>
+              {photo.fileName} • {(photo.size / 1024).toFixed(1)} KB
+            </Text>
+          </View>
+          
+          <View style={styles.photoPreviewActions}>
+            <TouchableOpacity style={styles.discardButton} onPress={onDiscard}>
+              <Icon name="delete" size={20} color="#ef4444" />
+              <Text style={styles.discardButtonText}>Discard</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
+              <Icon name="check" size={20} color="#ffffff" />
+              <Text style={styles.confirmButtonText}>Use Photo</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </Animated.View>
+    </Modal>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -981,6 +1073,99 @@ const styles = StyleSheet.create({
   },
   categoryItemTextSelected: {
     color: '#3b82f6',
+    fontWeight: '600',
+  },
+  // Photo Preview Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  photoPreviewContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  photoPreviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  photoPreviewTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  photoPreviewContent: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  previewImage: {
+    width: '100%',
+    height: 300,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  photoInfo: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  photoPreviewActions: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 12,
+  },
+  discardButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fef2f2',
+    borderColor: '#ef4444',
+    borderWidth: 2,
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+  },
+  discardButtonText: {
+    fontSize: 16,
+    color: '#ef4444',
+    fontWeight: '600',
+  },
+  confirmButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3b82f6',
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    color: '#ffffff',
     fontWeight: '600',
   },
 });
