@@ -11,6 +11,11 @@ export async function generateUserId() {
   return `USR-${seq.toString().padStart(6, '0')}`;
 }
 
+export async function generateUserTypeId() {
+  const seq = await nextSequence('usertype');
+  return `UT-${seq.toString().padStart(4, '0')}`;
+}
+
 export async function generateReportId(departmentCode) {
   const seq = await nextSequence(`report-${departmentCode}`);
   return `${departmentCode}-${seq.toString().padStart(5, '0')}`;

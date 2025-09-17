@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType } from 'react-native-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -64,6 +65,22 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showPhotoPreview, setShowPhotoPreview] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<PhotoObject | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Load current user from AsyncStorage
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('user');
+        if (userData) {
+          setCurrentUser(JSON.parse(userData));
+        }
+      } catch (error) {
+        console.error('Error loading user:', error);
+      }
+    };
+    loadUser();
+  }, []);
 
   // Animation values
   const headerTranslateY = useSharedValue(-50);
@@ -245,8 +262,8 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
       timestamp: new Date().toISOString(),
       priority: 'medium',
       upvotes: 0,
-      reporterEmail: 'test@example.com', // In real app, get from user context
-      userId: 'user123', // In real app, get from user context
+      reporterEmail: currentUser?.email || 'unknown@example.com',
+      userId: currentUser?.id || 'unknown',
     };
     
     // Call onSubmit if provided, otherwise show success message

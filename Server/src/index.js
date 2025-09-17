@@ -6,6 +6,7 @@ import morgan from 'morgan';
 
 import reportsRouter from './routes/reports.js';
 import usersRouter from './routes/users.js';
+import usertypesRouter from './routes/usertypes.js';
 
 const app = express();
 app.use(cors({
@@ -24,6 +25,7 @@ const PORT = process.env.PORT || 4000;
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api/reports', reportsRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/usertypes', usertypesRouter);
 
 app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT}`));
 

@@ -39,6 +39,7 @@ const mandalAdminNavItems = [
   { icon: Home, label: "Mandal Dashboard", page: "mandal-dashboard" },
   { icon: Building2, label: "Department Management", page: "department-management" },
   { icon: Users, label: "User Management", page: "user-management" },
+  { icon: Calendar, label: "Schedule", page: "mandal-schedule" },
   { icon: BarChart3, label: "System Reports", page: "system-reports" },
   { icon: Settings, label: "System Settings", page: "system-settings" },
 ];

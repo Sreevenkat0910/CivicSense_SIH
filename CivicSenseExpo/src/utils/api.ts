@@ -54,6 +54,7 @@ export const submitReport = async (reportData: {
   voiceNoteUrl?: string;
   department: string;
   reporterEmail?: string;
+  reporterUserId?: string;
 }) => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/reports`, {

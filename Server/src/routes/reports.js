@@ -127,6 +127,9 @@ router.post('/', async (req, res) => {
         voice_note_url: voiceNoteUrl || null,
         department: department.trim(),
         reporter_email: reporterEmail?.trim() || null,
+        reporter_user_id: reporterUserId?.trim() || null,
+        priority: priority || 'medium',
+        status: 'pending'
       })
       .select('id, report_id, title, category, created_at')
       .single();
@@ -155,7 +158,15 @@ router.get('/', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('reports')
-      .select('*')
+      .select(`
+        *,
+        reporter:reporter_user_id(
+          user_id,
+          full_name,
+          email,
+          mobile
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -181,7 +192,15 @@ router.get('/:id', async (req, res) => {
     
     const { data, error } = await supabase
       .from('reports')
-      .select('*')
+      .select(`
+        *,
+        reporter:reporter_user_id(
+          user_id,
+          full_name,
+          email,
+          mobile
+        )
+      `)
       .eq('report_id', id)
       .single();
 

@@ -16,6 +16,7 @@ import { IssueDetailsSidebar } from "./components/IssueDetailsSidebar";
 import { NotificationsPanel } from "./components/NotificationsPanel";
 import { Issue } from "./components/IssueTable";
 import { SchedulePage } from "./components/SchedulePage";
+import { MandalSchedulePage } from "./components/MandalSchedulePage";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -110,6 +111,8 @@ export default function App() {
         );
       case "user-management":
         return <UserManagement />;
+      case "mandal-schedule":
+        return <MandalSchedulePage />;
       case "department-issues":
         return (
           <PlaceholderPage

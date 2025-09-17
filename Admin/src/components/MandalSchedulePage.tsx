@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -20,11 +18,13 @@ import {
   Users,
   MapPin,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Building2,
+  UserCheck
 } from "lucide-react";
 import { format, addDays, subDays, isToday, isTomorrow, isYesterday, startOfDay, endOfDay } from "date-fns";
 
-interface ScheduleItem {
+interface MandalScheduleItem {
   id: string;
   title: string;
   description: string;
@@ -36,70 +36,95 @@ interface ScheduleItem {
   assignedTo: string;
   location: string;
   department: string;
+  mandalArea: string;
+  supervisor: string;
 }
 
-const mockScheduleItems: ScheduleItem[] = [
+const mockMandalScheduleItems: MandalScheduleItem[] = [
   {
     id: "1",
-    title: "Road Maintenance - Main Street",
-    description: "Pothole repair and resurfacing work",
+    title: "Mandal-wide Road Maintenance",
+    description: "Comprehensive road repair across all mandal areas",
     startTime: "08:00",
-    endTime: "16:00",
+    endTime: "17:00",
     date: new Date(),
     priority: "high",
-    status: "pending",
-    assignedTo: "Public Works Team",
-    location: "Main Street, Downtown",
-    department: "Public Works"
+    status: "in-progress",
+    assignedTo: "All Public Works Teams",
+    location: "Karimnagar Mandal",
+    department: "Public Works",
+    mandalArea: "Central Zone",
+    supervisor: "Rajesh Kumar"
   },
   {
     id: "2",
-    title: "Street Light Inspection",
-    description: "Routine inspection and maintenance of street lights",
+    title: "Water Supply System Inspection",
+    description: "Quarterly inspection of water supply infrastructure",
     startTime: "09:00",
-    endTime: "12:00",
+    endTime: "15:00",
     date: addDays(new Date(), 1),
-    priority: "medium",
+    priority: "high",
     status: "pending",
-    assignedTo: "Electrical Team",
-    location: "Oak Avenue",
-    department: "Utilities"
+    assignedTo: "Water Department Team",
+    location: "All Mandal Areas",
+    department: "Water Department",
+    mandalArea: "All Zones",
+    supervisor: "Priya Sharma"
   },
   {
     id: "3",
-    title: "Traffic Signal Maintenance",
-    description: "Software update and hardware check",
+    title: "Department Head Meeting",
+    description: "Monthly coordination meeting with all department heads",
     startTime: "10:00",
-    endTime: "14:00",
+    endTime: "12:00",
     date: subDays(new Date(), 1),
-    priority: "high",
+    priority: "medium",
     status: "completed",
-    assignedTo: "Traffic Department",
-    location: "Broadway & 5th Street",
-    department: "Traffic Department"
+    assignedTo: "All Department Heads",
+    location: "Mandal Office",
+    department: "Administration",
+    mandalArea: "Central Zone",
+    supervisor: "Rajesh Kumar"
   },
   {
     id: "4",
-    title: "Park Cleanup",
-    description: "General cleanup and landscaping",
-    startTime: "07:00",
-    endTime: "11:00",
+    title: "Public Works Training Session",
+    description: "Safety training for public works staff",
+    startTime: "14:00",
+    endTime: "16:00",
     date: addDays(new Date(), 2),
-    priority: "low",
+    priority: "medium",
     status: "pending",
-    assignedTo: "Parks & Recreation",
-    location: "Central Park",
-    department: "Parks & Recreation"
+    assignedTo: "Public Works Staff",
+    location: "Training Center",
+    department: "Public Works",
+    mandalArea: "Central Zone",
+    supervisor: "Amit Patel"
+  },
+  {
+    id: "5",
+    title: "Mandal Health Camp",
+    description: "Free health checkup camp for citizens",
+    startTime: "08:00",
+    endTime: "18:00",
+    date: addDays(new Date(), 3),
+    priority: "high",
+    status: "pending",
+    assignedTo: "Health Department",
+    location: "Community Center",
+    department: "Health Department",
+    mandalArea: "North Zone",
+    supervisor: "Dr. Sunita Reddy"
   }
 ];
 
-export function SchedulePage() {
+export function MandalSchedulePage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("today");
-  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>(mockScheduleItems);
+  const [scheduleItems, setScheduleItems] = useState<MandalScheduleItem[]>(mockMandalScheduleItems);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<ScheduleItem | null>(null);
+  const [editingItem, setEditingItem] = useState<MandalScheduleItem | null>(null);
 
   const getFilteredItems = () => {
     const today = new Date();
@@ -144,8 +169,8 @@ export function SchedulePage() {
     }
   };
 
-  const handleAddSchedule = (newItem: Omit<ScheduleItem, "id">) => {
-    const item: ScheduleItem = {
+  const handleAddSchedule = (newItem: Omit<MandalScheduleItem, "id">) => {
+    const item: MandalScheduleItem = {
       ...newItem,
       id: Date.now().toString()
     };
@@ -153,7 +178,7 @@ export function SchedulePage() {
     setIsAddDialogOpen(false);
   };
 
-  const handleEditSchedule = (updatedItem: ScheduleItem) => {
+  const handleEditSchedule = (updatedItem: MandalScheduleItem) => {
     setScheduleItems(prev => prev.map(item => 
       item.id === updatedItem.id ? updatedItem : item
     ));
@@ -172,9 +197,9 @@ export function SchedulePage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Schedule Management</h1>
+          <h1 className="text-3xl font-bold">Mandal Schedule Management</h1>
           <p className="text-muted-foreground">
-            Manage work schedules and assignment calendars
+            Manage work schedules and assignments across all departments in Karimnagar Mandal
           </p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -186,9 +211,9 @@ export function SchedulePage() {
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Add New Schedule Item</DialogTitle>
+              <DialogTitle>Add New Mandal Schedule Item</DialogTitle>
             </DialogHeader>
-            <ScheduleForm 
+            <MandalScheduleForm 
               onSubmit={handleAddSchedule}
               onCancel={() => setIsAddDialogOpen(false)}
             />
@@ -262,10 +287,10 @@ export function SchedulePage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {activeTab === "yesterday" && "Yesterday's Schedule"}
-              {activeTab === "today" && "Today's Schedule"}
-              {activeTab === "tomorrow" && "Tomorrow's Schedule"}
-              {activeTab === "custom" && `Schedule for ${format(selectedDate, "MMMM d, yyyy")}`}
+              {activeTab === "yesterday" && "Yesterday's Mandal Schedule"}
+              {activeTab === "today" && "Today's Mandal Schedule"}
+              {activeTab === "tomorrow" && "Tomorrow's Mandal Schedule"}
+              {activeTab === "custom" && `Mandal Schedule for ${format(selectedDate, "MMMM d, yyyy")}`}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -295,7 +320,7 @@ export function SchedulePage() {
                         <p className="text-sm text-muted-foreground mb-2">
                           {item.description}
                         </p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
                             {item.startTime} - {item.endTime}
@@ -307,6 +332,16 @@ export function SchedulePage() {
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
                             {item.location}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Building2 className="h-4 w-4" />
+                            {item.mandalArea}
+                          </div>
+                        </div>
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <UserCheck className="h-4 w-4" />
+                            Supervisor: {item.supervisor}
                           </div>
                         </div>
                       </div>
@@ -342,7 +377,7 @@ export function SchedulePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Daily Timetable
+              Mandal Daily Timetable
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               Hour-wise schedule view for {activeTab === "yesterday" && "Yesterday"}
@@ -352,7 +387,7 @@ export function SchedulePage() {
             </p>
           </CardHeader>
           <CardContent>
-            <TimetableView 
+            <MandalTimetableView 
               scheduleItems={filteredItems}
               selectedDate={activeTab === "custom" ? selectedDate : 
                 activeTab === "yesterday" ? subDays(new Date(), 1) :
@@ -366,10 +401,10 @@ export function SchedulePage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Schedule Item</DialogTitle>
+            <DialogTitle>Edit Mandal Schedule Item</DialogTitle>
           </DialogHeader>
           {editingItem && (
-            <ScheduleForm 
+            <MandalScheduleForm 
               initialData={editingItem}
               onSubmit={handleEditSchedule}
               onCancel={() => {
@@ -384,13 +419,13 @@ export function SchedulePage() {
   );
 }
 
-interface ScheduleFormProps {
-  initialData?: ScheduleItem;
-  onSubmit: (data: ScheduleItem) => void;
+interface MandalScheduleFormProps {
+  initialData?: MandalScheduleItem;
+  onSubmit: (data: MandalScheduleItem) => void;
   onCancel: () => void;
 }
 
-function ScheduleForm({ initialData, onSubmit, onCancel }: ScheduleFormProps) {
+function MandalScheduleForm({ initialData, onSubmit, onCancel }: MandalScheduleFormProps) {
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     description: initialData?.description || "",
@@ -401,7 +436,9 @@ function ScheduleForm({ initialData, onSubmit, onCancel }: ScheduleFormProps) {
     status: initialData?.status || "pending",
     assignedTo: initialData?.assignedTo || "",
     location: initialData?.location || "",
-    department: initialData?.department || ""
+    department: initialData?.department || "",
+    mandalArea: initialData?.mandalArea || "",
+    supervisor: initialData?.supervisor || ""
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -409,7 +446,7 @@ function ScheduleForm({ initialData, onSubmit, onCancel }: ScheduleFormProps) {
     onSubmit({
       ...formData,
       id: initialData?.id || ""
-    } as ScheduleItem);
+    } as MandalScheduleItem);
   };
 
   return (
@@ -440,6 +477,9 @@ function ScheduleForm({ initialData, onSubmit, onCancel }: ScheduleFormProps) {
               <SelectItem value="Parks & Recreation">Parks & Recreation</SelectItem>
               <SelectItem value="Water Department">Water Department</SelectItem>
               <SelectItem value="Code Enforcement">Code Enforcement</SelectItem>
+              <SelectItem value="Health Department">Health Department</SelectItem>
+              <SelectItem value="Education Department">Education Department</SelectItem>
+              <SelectItem value="Administration">Administration</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -552,6 +592,37 @@ function ScheduleForm({ initialData, onSubmit, onCancel }: ScheduleFormProps) {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium">Mandal Area</label>
+          <Select
+            value={formData.mandalArea}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, mandalArea: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select mandal area" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Central Zone">Central Zone</SelectItem>
+              <SelectItem value="North Zone">North Zone</SelectItem>
+              <SelectItem value="South Zone">South Zone</SelectItem>
+              <SelectItem value="East Zone">East Zone</SelectItem>
+              <SelectItem value="West Zone">West Zone</SelectItem>
+              <SelectItem value="All Zones">All Zones</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Supervisor</label>
+          <Input
+            value={formData.supervisor}
+            onChange={(e) => setFormData(prev => ({ ...prev, supervisor: e.target.value }))}
+            placeholder="Supervisor name"
+            required
+          />
+        </div>
+      </div>
+
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
@@ -564,12 +635,12 @@ function ScheduleForm({ initialData, onSubmit, onCancel }: ScheduleFormProps) {
   );
 }
 
-interface TimetableViewProps {
-  scheduleItems: ScheduleItem[];
+interface MandalTimetableViewProps {
+  scheduleItems: MandalScheduleItem[];
   selectedDate: Date;
 }
 
-function TimetableView({ scheduleItems, selectedDate }: TimetableViewProps) {
+function MandalTimetableView({ scheduleItems, selectedDate }: MandalTimetableViewProps) {
   // Indian working hours: 9 AM to 6 PM (9:00 - 18:00)
   const workingHours = Array.from({ length: 10 }, (_, i) => {
     const hour = 9 + i;
@@ -692,7 +763,7 @@ function TimetableView({ scheduleItems, selectedDate }: TimetableViewProps) {
                         {item.startTime} - {item.endTime}
                       </div>
                       <div className="text-muted-foreground truncate">
-                        {item.assignedTo}
+                        {item.mandalArea}
                       </div>
                     </div>
                   ))}
@@ -711,7 +782,7 @@ function TimetableView({ scheduleItems, selectedDate }: TimetableViewProps) {
 
       {/* Summary */}
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <h4 className="font-medium mb-2">Schedule Summary</h4>
+        <h4 className="font-medium mb-2">Mandal Schedule Summary</h4>
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">
