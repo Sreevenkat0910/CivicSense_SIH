@@ -15,6 +15,7 @@ import { FilterPanel } from "./components/FilterPanel";
 import { IssueDetailsSidebar } from "./components/IssueDetailsSidebar";
 import { NotificationsPanel } from "./components/NotificationsPanel";
 import { Issue } from "./components/IssueTable";
+import { SchedulePage } from "./components/SchedulePage";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -145,12 +146,7 @@ export default function App() {
           />
         );
       case "schedule":
-        return (
-          <PlaceholderPage
-            title="Schedule"
-            description="Manage work schedules and assignment calendars"
-          />
-        );
+        return <SchedulePage />;
       case "settings":
         return (
           <PlaceholderPage
