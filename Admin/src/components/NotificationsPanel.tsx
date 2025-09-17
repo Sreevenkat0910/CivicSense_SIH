@@ -1,3 +1,4 @@
+import React from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -103,7 +104,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex justify-end">
+    <div className="fixed inset-0 bg-black/50 z-[10000] flex justify-end">
       <div className="bg-background w-80 h-full shadow-xl overflow-y-auto">
         <Card className="h-full rounded-none border-0">
           <div className="p-6 border-b sticky top-0 bg-background z-10">
