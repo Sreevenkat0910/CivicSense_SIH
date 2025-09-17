@@ -33,6 +33,37 @@ router.post('/register', async (req, res) => {
   }
 });
 
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
+
+    // Find user by email
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, user_id, full_name, email, mobile, language, password_hash')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (userError) return res.status(500).json({ error: userError.message });
+    if (!user) return res.status(401).json({ error: 'Invalid email or password' });
+
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    if (!isValidPassword) return res.status(401).json({ error: 'Invalid email or password' });
+
+    // Return user data (excluding password hash)
+    const { password_hash, ...userData } = user;
+    return res.status(200).json({
+      success: true,
+      user: userData
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal server error', message: err?.message });
+  }
+});
+
 export default router;
 
 
