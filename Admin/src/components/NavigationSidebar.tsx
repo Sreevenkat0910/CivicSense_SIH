@@ -29,6 +29,7 @@ const adminNavItems = [
 
 const departmentNavItems = [
   { icon: Building2, label: "Department Dashboard", page: "department" },
+  { icon: Calendar, label: "Schedule", page: "schedule" },
   { icon: Settings, label: "Settings", page: "settings" },
 ];
 

@@ -112,9 +112,13 @@ export default function App() {
       case "user-management":
         return <UserManagement />;
       case "mandal-schedule":
-        return <MandalSchedulePage />;
+        return <MandalSchedulePage mandalName={mandalName} />;
       case "schedule":
-        return <SchedulePage />;
+        return <SchedulePage 
+          userRole={userRole}
+          userDepartment={userDepartment}
+          mandalName={mandalName}
+        />;
       case "system-settings":
         return (
           <PlaceholderPage

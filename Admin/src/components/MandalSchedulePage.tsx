@@ -7,6 +7,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Calendar } from "./ui/calendar";
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -23,6 +24,13 @@ import {
   UserCheck
 } from "lucide-react";
 import { format, addDays, subDays, isToday, isTomorrow, isYesterday, startOfDay, endOfDay } from "date-fns";
+import { 
+  getScheduleDataForRole, 
+  canManageSchedule, 
+  getAvailableDepartments,
+  getAvailableMandalAreas,
+  type MandalScheduleItem 
+} from "../data/scheduleData";
 
 interface MandalScheduleItem {
   id: string;
@@ -118,10 +126,16 @@ const mockMandalScheduleItems: MandalScheduleItem[] = [
   }
 ];
 
-export function MandalSchedulePage() {
+interface MandalSchedulePageProps {
+  mandalName: string;
+}
+
+export function MandalSchedulePage({ mandalName }: MandalSchedulePageProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("today");
-  const [scheduleItems, setScheduleItems] = useState<MandalScheduleItem[]>(mockMandalScheduleItems);
+  const [scheduleItems, setScheduleItems] = useState<MandalScheduleItem[]>(() => 
+    getScheduleDataForRole("mandal-admin", undefined, mandalName) as MandalScheduleItem[]
+  );
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MandalScheduleItem | null>(null);
