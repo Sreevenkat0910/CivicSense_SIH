@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { NavigationSidebar } from "./components/NavigationSidebar";
 import { HeaderBar } from "./components/HeaderBar";
 import { DepartmentHeaderBar } from "./components/DepartmentHeaderBar";
 import { MandalAdminHeaderBar } from "./components/MandalAdminHeaderBar";
 import { DashboardPage } from "./components/DashboardPage";
+import { ComprehensiveDashboard } from "./components/ComprehensiveDashboard";
 import { IssuesPage } from "./components/IssuesPage";
 import { DepartmentDashboard } from "./components/DepartmentDashboard";
 import { HodDashboard } from "./components/HodDashboard";
@@ -21,7 +23,8 @@ import { SchedulePage } from "./components/SchedulePage";
 import { MandalSchedulePage } from "./components/MandalSchedulePage";
 import { MyTimetable } from "./components/MyTimetable";
 
-export default function App() {
+function AppContent() {
+  const { user, logout, isAuthenticated } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<"admin" | "department" | "department-employee" | "mandal-admin">("admin");
   const [userDepartment, setUserDepartment] = useState("Public Works");
@@ -58,6 +61,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    logout();
     setIsLoggedIn(false);
     setCurrentPage("dashboard");
   };
@@ -102,12 +106,8 @@ export default function App() {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case "dashboard":
-        // Redirect legacy Admin Dashboard to Mandal Admin dashboard
-        return (
-          <MandalAdminDashboard
-            onNavigate={setCurrentPage}
-          />
-        );
+        // Use comprehensive dashboard for admin users
+        return <ComprehensiveDashboard />;
       case "issues":
         return <IssuesPage onIssueClick={handleIssueClick} />;
       case "department":
@@ -170,6 +170,7 @@ export default function App() {
           <HodDashboard
             departmentName={userDepartment}
             onNavigate={setCurrentPage}
+            initialTab="issues"
           />
         );
       case "department-employees":
@@ -177,6 +178,7 @@ export default function App() {
           <HodDashboard
             departmentName={userDepartment}
             onNavigate={setCurrentPage}
+            initialTab="employees"
           />
         );
       case "department-settings":
@@ -222,13 +224,7 @@ export default function App() {
           />
         );
       default:
-        return (
-          <DashboardPage
-            onIssueClick={handleIssueClick}
-            onToggleFilters={() => setIsFilterOpen(true)}
-            onMarkerClick={handleMarkerClick}
-          />
-        );
+        return <ComprehensiveDashboard />;
     }
   };
 
@@ -276,7 +272,7 @@ export default function App() {
     }
   };
 
-  if (!isLoggedIn) {
+  if (!isAuthenticated) {
     return <LoginPage onLogin={handleLogin} />;
   }
 
@@ -322,5 +318,13 @@ export default function App() {
         extraNotifications={extraNotifications}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -23,12 +23,17 @@ import {
   ChevronRight
 } from "lucide-react";
 import { format, addDays, subDays, isToday, isTomorrow, isYesterday, startOfDay, endOfDay } from "date-fns";
-import { 
-  getScheduleDataForRole, 
-  canManageSchedule, 
-  getAvailableDepartments,
-  type ScheduleItem 
-} from "../data/scheduleData";
+import ApiService from "../services/api";
+
+// Helper function for available departments
+const getAvailableDepartments = (role: string) => {
+  if (role === "admin") {
+    return ["Water Department", "Electricity Department", "Sanitation Department", "Roads Department", "Health Department"];
+  } else if (role === "mandal-admin") {
+    return ["Water Department", "Electricity Department", "Sanitation Department", "Roads Department", "Health Department"];
+  }
+  return [];
+};
 
 interface SchedulePageProps {
   userRole: "admin" | "department" | "mandal-admin";
@@ -36,81 +41,203 @@ interface SchedulePageProps {
   mandalName?: string;
 }
 
+interface ScheduleItem {
+  id: string;
+  title: string;
+  description: string;
+  start_time: string;
+  end_time: string;
+  location?: string;
+  is_recurring: boolean;
+  recurrence_pattern?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export function SchedulePage({ userRole, userDepartment, mandalName }: SchedulePageProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("today");
-  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>(() => 
-    getScheduleDataForRole(userRole, userDepartment, mandalName)
-  );
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ScheduleItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch schedules from API
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        setLoading(true);
+        const response = await ApiService.getSchedules();
+        
+        if (response.success) {
+          setScheduleItems(response.data.schedules || []);
+        } else {
+          setError(response.error || 'Failed to fetch schedules');
+        }
+      } catch (err) {
+        setError('Network error occurred');
+        console.error('Schedules fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchedules();
+  }, []);
 
   const getFilteredItems = () => {
     const today = new Date();
     switch (activeTab) {
       case "yesterday":
-        return scheduleItems.filter(item => isYesterday(item.date));
+        return scheduleItems.filter(item => {
+          const itemDate = new Date(item.start_time);
+          return isYesterday(itemDate);
+        });
       case "today":
-        return scheduleItems.filter(item => isToday(item.date));
+        return scheduleItems.filter(item => {
+          const itemDate = new Date(item.start_time);
+          return isToday(itemDate);
+        });
       case "tomorrow":
-        return scheduleItems.filter(item => isTomorrow(item.date));
+        return scheduleItems.filter(item => {
+          const itemDate = new Date(item.start_time);
+          return isTomorrow(itemDate);
+        });
       default:
-        return scheduleItems.filter(item => 
-          item.date >= startOfDay(selectedDate) && item.date <= endOfDay(selectedDate)
-        );
+        return scheduleItems.filter(item => {
+          const itemDate = new Date(item.start_time);
+          return itemDate >= startOfDay(selectedDate) && itemDate <= endOfDay(selectedDate);
+        });
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high": return "bg-red-100 text-red-800 border-red-200";
-      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "low": return "bg-green-100 text-green-800 border-green-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+  const getRecurringColor = (isRecurring: boolean) => {
+    return isRecurring ? "bg-blue-100 text-blue-800 border-blue-200" : "bg-gray-100 text-gray-800 border-gray-200";
+  };
+
+  const getTimeColor = (startTime: string) => {
+    const now = new Date();
+    const scheduleTime = new Date(startTime);
+    const diffHours = (scheduleTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    if (diffHours < 0) return "bg-gray-100 text-gray-800 border-gray-200"; // Past
+    if (diffHours < 2) return "bg-red-100 text-red-800 border-red-200"; // Soon
+    if (diffHours < 24) return "bg-yellow-100 text-yellow-800 border-yellow-200"; // Today
+    return "bg-green-100 text-green-800 border-green-200"; // Future
+  };
+
+  const getTimeIcon = (startTime: string) => {
+    const now = new Date();
+    const scheduleTime = new Date(startTime);
+    const diffHours = (scheduleTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    if (diffHours < 0) return <Clock className="h-4 w-4" />; // Past
+    if (diffHours < 2) return <AlertCircle className="h-4 w-4" />; // Soon
+    return <Clock className="h-4 w-4" />; // Future
+  };
+
+  const handleAddSchedule = async (scheduleData: any) => {
+    try {
+      const response = await ApiService.createSchedule(scheduleData);
+      if (response.success) {
+        // Refresh schedules
+        const refreshResponse = await ApiService.getSchedules();
+        if (refreshResponse.success) {
+          setScheduleItems(refreshResponse.data.schedules || []);
+        }
+        setIsAddDialogOpen(false);
+      } else {
+        setError(response.error || 'Failed to create schedule');
+      }
+    } catch (err) {
+      setError('Network error occurred');
+      console.error('Create schedule error:', err);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed": return "bg-green-100 text-green-800 border-green-200";
-      case "in-progress": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "pending": return "bg-orange-100 text-orange-800 border-orange-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+  const handleEditSchedule = async (scheduleId: string, scheduleData: any) => {
+    try {
+      const response = await ApiService.updateSchedule(scheduleId, scheduleData);
+      if (response.success) {
+        // Refresh schedules
+        const refreshResponse = await ApiService.getSchedules();
+        if (refreshResponse.success) {
+          setScheduleItems(refreshResponse.data.schedules || []);
+        }
+        setIsEditDialogOpen(false);
+        setEditingItem(null);
+      } else {
+        setError(response.error || 'Failed to update schedule');
+      }
+    } catch (err) {
+      setError('Network error occurred');
+      console.error('Update schedule error:', err);
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "completed": return <CheckCircle className="h-4 w-4" />;
-      case "in-progress": return <Clock className="h-4 w-4" />;
-      case "pending": return <AlertCircle className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    try {
+      const response = await ApiService.deleteSchedule(scheduleId);
+      if (response.success) {
+        // Refresh schedules
+        const refreshResponse = await ApiService.getSchedules();
+        if (refreshResponse.success) {
+          setScheduleItems(refreshResponse.data.schedules || []);
+        }
+      } else {
+        setError(response.error || 'Failed to delete schedule');
+      }
+    } catch (err) {
+      setError('Network error occurred');
+      console.error('Delete schedule error:', err);
     }
-  };
-
-  const handleAddSchedule = (newItem: Omit<ScheduleItem, "id">) => {
-    const item: ScheduleItem = {
-      ...newItem,
-      id: Date.now().toString()
-    };
-    setScheduleItems(prev => [...prev, item]);
-    setIsAddDialogOpen(false);
-  };
-
-  const handleEditSchedule = (updatedItem: ScheduleItem) => {
-    setScheduleItems(prev => prev.map(item => 
-      item.id === updatedItem.id ? updatedItem : item
-    ));
-    setIsEditDialogOpen(false);
-    setEditingItem(null);
-  };
-
-  const handleDeleteSchedule = (id: string) => {
-    setScheduleItems(prev => prev.filter(item => item.id !== id));
   };
 
   const filteredItems = getFilteredItems();
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Schedule Management</h1>
+            <p className="text-muted-foreground">Loading schedules...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-6">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Schedule Management</h1>
+            <p className="text-muted-foreground">Error loading schedules</p>
+          </div>
+        </div>
+        <Card className="p-6">
+          <div className="text-center text-red-600">
+            Error: {error}
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -235,13 +362,13 @@ export function SchedulePage({ userRole, userDepartment, mandalName }: ScheduleP
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="font-semibold">{item.title}</h3>
-                          <Badge className={getPriorityColor(item.priority)}>
-                            {item.priority}
+                          <Badge className={getRecurringColor(item.is_recurring)}>
+                            {item.is_recurring ? 'Recurring' : 'One-time'}
                           </Badge>
-                          <Badge className={getStatusColor(item.status)}>
+                          <Badge className={getTimeColor(item.start_time)}>
                             <div className="flex items-center gap-1">
-                              {getStatusIcon(item.status)}
-                              {item.status}
+                              {getTimeIcon(item.start_time)}
+                              {format(new Date(item.start_time), 'HH:mm')} - {format(new Date(item.end_time), 'HH:mm')}
                             </div>
                           </Badge>
                         </div>
@@ -251,40 +378,40 @@ export function SchedulePage({ userRole, userDepartment, mandalName }: ScheduleP
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
-                            {item.startTime} - {item.endTime}
+                            {format(new Date(item.start_time), 'MMM dd, yyyy')}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Users className="h-4 w-4" />
-                            {item.assignedTo}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="h-4 w-4" />
-                            {item.location}
-                          </div>
+                          {item.location && (
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {item.location}
+                            </div>
+                          )}
+                          {item.recurrence_pattern && (
+                            <div className="flex items-center gap-1">
+                              <CalendarIcon className="h-4 w-4" />
+                              {item.recurrence_pattern}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {canManageSchedule(userRole, item, userDepartment, mandalName) && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setEditingItem(item);
-                                setIsEditDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteSchedule(item.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingItem(item);
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteSchedule(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </Card>
@@ -355,22 +482,31 @@ function ScheduleForm({ userRole, userDepartment, initialData, onSubmit, onCance
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     description: initialData?.description || "",
-    startTime: initialData?.startTime || "",
-    endTime: initialData?.endTime || "",
-    date: initialData?.date || new Date(),
-    priority: initialData?.priority || "medium",
-    status: initialData?.status || "pending",
-    assignedTo: initialData?.assignedTo || "",
+    startTime: initialData ? new Date(initialData.start_time).toTimeString().slice(0, 5) : "",
+    endTime: initialData ? new Date(initialData.end_time).toTimeString().slice(0, 5) : "",
+    date: initialData ? new Date(initialData.start_time) : new Date(),
+    priority: "medium",
+    status: "pending",
+    assignedTo: "",
     location: initialData?.location || "",
     department: initialData?.department || (userRole === "department" ? userDepartment : "")
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      ...formData,
-      id: initialData?.id || ""
-    } as ScheduleItem);
+    
+    // Convert form data to API format
+    const apiData = {
+      title: formData.title,
+      description: formData.description,
+      start_time: `${formData.date.toISOString().split('T')[0]}T${formData.startTime}:00`,
+      end_time: `${formData.date.toISOString().split('T')[0]}T${formData.endTime}:00`,
+      location: formData.location,
+      is_recurring: false
+    };
+    
+    console.log('Submitting schedule:', apiData);
+    onSubmit(apiData);
   };
 
   return (
@@ -550,8 +686,8 @@ function TimetableView({ scheduleItems, selectedDate }: TimetableViewProps) {
     
     // Find schedule items that overlap with this hour
     const overlappingItems = scheduleItems.filter(item => {
-      const itemStart = item.startTime;
-      const itemEnd = item.endTime;
+      const itemStart = new Date(item.start_time).toTimeString().slice(0, 5);
+      const itemEnd = new Date(item.end_time).toTimeString().slice(0, 5);
       
       // Check if there's any overlap
       return (
@@ -652,10 +788,10 @@ function TimetableView({ scheduleItems, selectedDate }: TimetableViewProps) {
                     <div key={item.id} className="text-xs">
                       <div className="font-medium truncate">{item.title}</div>
                       <div className="text-muted-foreground">
-                        {item.startTime} - {item.endTime}
+                        {new Date(item.start_time).toTimeString().slice(0, 5)} - {new Date(item.end_time).toTimeString().slice(0, 5)}
                       </div>
                       <div className="text-muted-foreground truncate">
-                        {item.assignedTo}
+                        {item.location || 'No location'}
                       </div>
                     </div>
                   ))}

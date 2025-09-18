@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   Clock
 } from "lucide-react";
+import ApiService from "../services/api";
 
 // Mock data for mandal overview
 const mandalStats = {
@@ -87,6 +88,51 @@ interface MandalAdminDashboardProps {
 
 export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) {
   const [selectedPeriod, setSelectedPeriod] = useState("this_month");
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch real analytics data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch analytics overview
+        const analyticsResponse = await ApiService.getOverviewStats();
+        if (analyticsResponse.success) {
+          setAnalyticsData(analyticsResponse.data.overview);
+        }
+
+        // Fetch issues for map
+        const issuesResponse = await ApiService.getReports({ limit: 20 });
+        if (issuesResponse.success) {
+          const transformedIssues: Issue[] = issuesResponse.data.reports.map((report: any) => ({
+            id: report.report_id,
+            category: report.category,
+            location: report.location_text || 'Location not specified',
+            status: report.status === 'submitted' ? 'open' : 
+                   report.status === 'in_progress' ? 'in-progress' : 
+                   report.status === 'resolved' ? 'resolved' : report.status,
+            priority: report.priority,
+            dateReported: new Date(report.created_at).toISOString().split('T')[0],
+            assignedDept: report.department,
+            description: report.description,
+            reporter: report.users?.full_name || 'Unknown'
+          }));
+          setIssues(transformedIssues);
+        }
+      } catch (err) {
+        setError('Network error occurred');
+        console.error('Data fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleMapMarkerClick = (markerId: string) => {
     // Hook up to your issue details flow if needed
@@ -108,6 +154,48 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
     }
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1>Mandal Administration Dashboard</h1>
+            <p className="text-muted-foreground">Loading mandal data...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="p-6">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1>Mandal Administration Dashboard</h1>
+            <p className="text-muted-foreground">Error loading mandal data</p>
+          </div>
+        </div>
+        <Card className="p-6">
+          <div className="text-center text-red-600">
+            Error: {error}
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -123,7 +211,7 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
             Mandal Admin
           </Badge>
           <Badge variant="outline">
-            {mandalStats.totalDepartments} Departments
+            {analyticsData?.user_statistics?.total_users || 0} Departments
           </Badge>
         </div>
       </div>
@@ -134,7 +222,7 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-2">Total Departments</p>
-              <p className="text-3xl mb-1">{mandalStats.totalDepartments}</p>
+              <p className="text-3xl mb-1">{analyticsData?.user_statistics?.total_users || 0}</p>
               <p className="text-sm text-green-600">All active</p>
             </div>
             <div className="p-3 rounded-lg bg-blue-50">
@@ -147,8 +235,8 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-2">Active Users</p>
-              <p className="text-3xl mb-1">{mandalStats.activeUsers}</p>
-              <p className="text-sm text-green-600">+{mandalStats.newUsersThisMonth} this month</p>
+              <p className="text-3xl mb-1">{analyticsData?.user_statistics?.active_users || 0}</p>
+              <p className="text-sm text-green-600">+{analyticsData?.user_statistics?.active_users || 0} this month</p>
             </div>
             <div className="p-3 rounded-lg bg-green-50">
               <Users className="w-6 h-6 text-green-600" />
@@ -160,8 +248,8 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-2">Total Issues</p>
-              <p className="text-3xl mb-1">{mandalStats.totalIssues}</p>
-              <p className="text-sm text-blue-600">{mandalStats.openIssues} open</p>
+              <p className="text-3xl mb-1">{analyticsData?.total_reports || 0}</p>
+              <p className="text-sm text-blue-600">{(analyticsData?.reports_by_status?.submitted || 0) + (analyticsData?.reports_by_status?.in_progress || 0)} open</p>
             </div>
             <div className="p-3 rounded-lg bg-purple-50">
               <FileText className="w-6 h-6 text-purple-600" />
@@ -173,7 +261,7 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-2">Avg Resolution</p>
-              <p className="text-3xl mb-1">{mandalStats.avgResolutionTime}</p>
+              <p className="text-3xl mb-1">2.3 days</p>
               <p className="text-sm text-green-600">Improving</p>
             </div>
             <div className="p-3 rounded-lg bg-orange-50">
@@ -189,7 +277,7 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
           <h3>Mandal Issue Map</h3>
         </div>
         <div className="relative h-[500px]">
-          <CityMapView onMarkerClick={handleMapMarkerClick} issues={mockIssues} />
+          <CityMapView onMarkerClick={handleMapMarkerClick} issues={issues} />
         </div>
       </Card>
 
@@ -200,7 +288,7 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
             <h3>Open Issues</h3>
             <AlertCircle className="w-5 h-5 text-red-600" />
           </div>
-          <p className="text-2xl mb-2">{mandalStats.openIssues}</p>
+          <p className="text-2xl mb-2">{(analyticsData?.reports_by_status?.submitted || 0) + (analyticsData?.reports_by_status?.in_progress || 0)}</p>
           <p className="text-sm text-muted-foreground">Require attention</p>
         </Card>
 
@@ -209,7 +297,7 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
             <h3>In Progress</h3>
             <Clock className="w-5 h-5 text-blue-600" />
           </div>
-          <p className="text-2xl mb-2">{mandalStats.inProgressIssues}</p>
+          <p className="text-2xl mb-2">{analyticsData?.reports_by_status?.in_progress || 0}</p>
           <p className="text-sm text-muted-foreground">Being worked on</p>
         </Card>
 
@@ -218,7 +306,7 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
             <h3>Resolved</h3>
             <CheckCircle2 className="w-5 h-5 text-green-600" />
           </div>
-          <p className="text-2xl mb-2">{mandalStats.resolvedIssues}</p>
+          <p className="text-2xl mb-2">{analyticsData?.reports_by_status?.resolved || 0}</p>
           <p className="text-sm text-muted-foreground">Successfully completed</p>
         </Card>
       </div>

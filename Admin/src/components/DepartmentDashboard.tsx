@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -34,6 +34,7 @@ import {
   Edit
 } from "lucide-react";
 import { Issue } from "./IssueTable";
+import ApiService from "../services/api";
 
 // Mock data for department-specific issues
 const mockDepartmentIssues: (Issue & { assignedEmployee?: string })[] = [
@@ -127,11 +128,51 @@ const getPriorityColor = (priority: string) => {
 };
 
 export function DepartmentDashboard({ onIssueClick, userDepartment }: DepartmentDashboardProps) {
-  const [issues, setIssues] = useState(mockDepartmentIssues);
+  const [issues, setIssues] = useState<(Issue & { assignedEmployee?: string })[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedIssue, setSelectedIssue] = useState<string | null>(null);
   const [newComment, setNewComment] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch real data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await ApiService.getReports({ limit: 50 });
+        
+        if (response.success) {
+          // Transform API data to match Issue interface
+          const transformedIssues: (Issue & { assignedEmployee?: string })[] = response.data.reports.map((report: any) => ({
+            id: report.report_id,
+            category: report.category,
+            location: report.location_text || 'Location not specified',
+            status: report.status === 'submitted' ? 'open' : 
+                   report.status === 'in_progress' ? 'in-progress' : 
+                   report.status === 'resolved' ? 'resolved' : report.status,
+            priority: report.priority,
+            dateReported: new Date(report.created_at).toISOString().split('T')[0],
+            assignedDept: report.department,
+            description: report.description,
+            reporter: report.users?.full_name || 'Unknown',
+            assignedEmployee: report.assigned_to || undefined
+          }));
+          setIssues(transformedIssues);
+        } else {
+          setError(response.error || 'Failed to fetch issues');
+        }
+      } catch (err) {
+        setError('Network error occurred');
+        console.error('Issues fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Filter issues based on search and status
   const filteredIssues = issues.filter(issue => {
@@ -167,6 +208,48 @@ export function DepartmentDashboard({ onIssueClick, userDepartment }: Department
         : issue
     ));
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1>Head of Department - {userDepartment}</h1>
+            <p className="text-muted-foreground">Loading department data...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="p-6">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1>Head of Department - {userDepartment}</h1>
+            <p className="text-muted-foreground">Error loading department data</p>
+          </div>
+        </div>
+        <Card className="p-6">
+          <div className="text-center text-red-600">
+            Error: {error}
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

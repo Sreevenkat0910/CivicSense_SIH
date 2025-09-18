@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -113,6 +113,7 @@ const mockTasks = [
 interface HodDashboardProps {
   departmentName?: string;
   onNavigate?: (page: string) => void;
+  initialTab?: "overview" | "issues" | "employees" | "tasks";
 }
 
 const getStatusColor = (status: string) => {
@@ -141,13 +142,18 @@ const getPriorityColor = (priority: string) => {
   }
 };
 
-export function HodDashboard({ departmentName = "Public Works", onNavigate }: HodDashboardProps) {
+export function HodDashboard({ departmentName = "Public Works", onNavigate, initialTab = "overview" }: HodDashboardProps) {
   const [issues, setIssues] = useState(mockDepartmentIssues);
   const [employees, setEmployees] = useState(departmentEmployees);
   const [tasks, setTasks] = useState(mockTasks);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState<"overview" | "issues" | "employees" | "tasks">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "issues" | "employees" | "tasks">(initialTab);
+
+  // Update active tab when initialTab prop changes
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   // Filter issues based on search and status
   const filteredIssues = issues.filter(issue => {

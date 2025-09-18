@@ -117,13 +117,14 @@ const getPriorityColor = (priority: string) => {
 interface IssueTableProps {
   onIssueClick: (issue: Issue) => void;
   onToggleFilters: () => void;
+  issues?: Issue[];
 }
 
-export function IssueTable({ onIssueClick, onToggleFilters }: IssueTableProps) {
+export function IssueTable({ onIssueClick, onToggleFilters, issues = mockIssues }: IssueTableProps) {
   const [sortBy, setSortBy] = useState<string>("dateReported");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-  const sortedIssues = [...mockIssues].sort((a, b) => {
+  const sortedIssues = [...issues].sort((a, b) => {
     const aVal = a[sortBy as keyof Issue];
     const bVal = b[sortBy as keyof Issue];
     

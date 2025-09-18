@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -35,452 +35,448 @@ import {
   MapPin,
   Calendar,
   ArrowUpDown,
-  Plus
+  Plus,
+  Loader2,
+  RefreshCw
 } from "lucide-react";
 import { Issue } from "./IssueTable";
-
-// Extended mock data for the Issues page
-const mockIssuesData: Issue[] = [
-  {
-    id: "ISS-2024-001",
-    category: "Pothole",
-    location: "Main St & 5th Ave",
-    status: "open",
-    priority: "high",
-    dateReported: "2024-01-15",
-    assignedDept: "Public Works",
-    description: "Large pothole causing traffic hazard",
-    reporter: "Jane Smith"
-  },
-  {
-    id: "ISS-2024-002",
-    category: "Street Light",
-    location: "Oak Park Blvd",
-    status: "in-progress",
-    priority: "medium",
-    dateReported: "2024-01-14",
-    assignedDept: "Utilities",
-    description: "Street light not working",
-    reporter: "Mike Johnson"
-  },
-  {
-    id: "ISS-2024-003",
-    category: "Graffiti",
-    location: "Downtown Library",
-    status: "resolved",
-    priority: "low",
-    dateReported: "2024-01-13",
-    assignedDept: "Parks & Rec",
-    description: "Graffiti on building wall",
-    reporter: "Sarah Davis"
-  },
-  {
-    id: "ISS-2024-004",
-    category: "Traffic Signal",
-    location: "1st St & Broadway",
-    status: "open",
-    priority: "high",
-    dateReported: "2024-01-12",
-    assignedDept: "Traffic Dept",
-    description: "Traffic light not cycling properly",
-    reporter: "Robert Wilson"
-  },
-  {
-    id: "ISS-2024-005",
-    category: "Water Main",
-    location: "Elm Street",
-    status: "in-progress",
-    priority: "high",
-    dateReported: "2024-01-11",
-    assignedDept: "Water Dept",
-    description: "Water main leak flooding street",
-    reporter: "Lisa Brown"
-  },
-  {
-    id: "ISS-2024-006",
-    category: "Sidewalk",
-    location: "Pine Ave",
-    status: "open",
-    priority: "medium",
-    dateReported: "2024-01-10",
-    assignedDept: "Public Works",
-    description: "Cracked sidewalk creating trip hazard",
-    reporter: "Tom Wilson"
-  },
-  {
-    id: "ISS-2024-007",
-    category: "Noise Complaint",
-    location: "Residential District",
-    status: "resolved",
-    priority: "low",
-    dateReported: "2024-01-09",
-    assignedDept: "Code Enforcement",
-    description: "Construction noise after hours",
-    reporter: "Maria Garcia"
-  },
-  {
-    id: "ISS-2024-008",
-    category: "Parking",
-    location: "City Center",
-    status: "open",
-    priority: "low",
-    dateReported: "2024-01-08",
-    assignedDept: "Parking Authority",
-    description: "Broken parking meter",
-    reporter: "David Lee"
-  }
-];
+import { NewReportForm } from "./NewReportForm";
+import ApiService from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 
 interface IssuesPageProps {
   onIssueClick: (issue: Issue) => void;
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "open":
-      return "bg-red-100 text-red-800 hover:bg-red-200";
-    case "in-progress":
-      return "bg-blue-100 text-blue-800 hover:bg-blue-200";
-    case "resolved":
-      return "bg-green-100 text-green-800 hover:bg-green-200";
-    default:
-      return "bg-gray-100 text-gray-800 hover:bg-gray-200";
-  }
-};
-
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case "high":
-      return "bg-red-100 text-red-800";
-    case "medium":
-      return "bg-orange-100 text-orange-800";
-    case "low":
-      return "bg-gray-100 text-gray-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
+interface Report {
+  id: string;
+  report_id: string;
+  title: string;
+  category: string;
+  description: string;
+  location_text?: string;
+  latitude?: number;
+  longitude?: number;
+  department: string;
+  mandal_area?: string;
+  priority: string;
+  status: string;
+  reporter_email?: string;
+  created_at: string;
+  updated_at: string;
+  assigned_to?: string;
+  resolution_notes?: string;
+  users?: {
+    user_id: string;
+    full_name: string;
+    email: string;
+    mobile?: string;
+  };
+}
 
 export function IssuesPage({ onIssueClick }: IssuesPageProps) {
-  const [issues, setIssues] = useState(mockIssuesData);
-  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
+  const { user } = useAuth();
+  const [reports, setReports] = useState<Report[]>([]);
+  const [filteredReports, setFilteredReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("dateReported");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [selectedReports, setSelectedReports] = useState<string[]>([]);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalReports, setTotalReports] = useState(0);
+  const itemsPerPage = 20;
 
-  // Filter and search logic
-  const filteredIssues = issues.filter(issue => {
-    const matchesSearch = 
-      issue.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      issue.reporter.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || issue.status === statusFilter;
-    const matchesPriority = priorityFilter === "all" || issue.priority === priorityFilter;
-    const matchesDepartment = departmentFilter === "all" || issue.assignedDept === departmentFilter;
-    
-    return matchesSearch && matchesStatus && matchesPriority && matchesDepartment;
+  // Load reports from API
+  const loadReports = async (page = 1, refresh = false) => {
+    try {
+      if (refresh) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+      setError(null);
+
+      const params: any = {
+        page,
+        limit: itemsPerPage,
+        sort_by: 'created_at',
+        sort_order: 'desc'
+      };
+
+      // Apply filters based on user role
+      if (user?.user_types?.type_name === 'department' && user.department) {
+        params.department = user.department;
+      } else if (user?.user_types?.type_name === 'mandal-admin' && user.mandal_area) {
+        params.mandal_area = user.mandal_area;
+      }
+
+      const response = await ApiService.getReports(params);
+      
+      if (response.success) {
+        setReports(response.data.reports || []);
+        setTotalPages(response.data.pagination?.pages || 1);
+        setTotalReports(response.data.pagination?.total || 0);
+      } else {
+        setError(response.error || 'Failed to load reports');
+      }
+    } catch (error) {
+      console.error('Error loading reports:', error);
+      setError('Network error occurred');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  // Apply filters
+  useEffect(() => {
+    let filtered = reports;
+
+    if (searchTerm) {
+      filtered = filtered.filter(report => 
+        report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.report_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.location_text?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(report => report.status === statusFilter);
+    }
+
+    if (priorityFilter !== "all") {
+      filtered = filtered.filter(report => report.priority === priorityFilter);
+    }
+
+    if (departmentFilter !== "all") {
+      filtered = filtered.filter(report => report.department === departmentFilter);
+    }
+
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(report => report.category === categoryFilter);
+    }
+
+    setFilteredReports(filtered);
+  }, [reports, searchTerm, statusFilter, priorityFilter, departmentFilter, categoryFilter]);
+
+  // Convert report to Issue format
+  const convertToIssue = (report: Report): Issue => ({
+    id: report.report_id,
+    category: report.category,
+    location: report.location_text || `${report.latitude}, ${report.longitude}`,
+    status: report.status,
+    priority: report.priority,
+    dateReported: new Date(report.created_at).toLocaleDateString(),
+    assignedDept: report.department,
+    description: report.description,
+    reporter: report.users?.full_name || report.reporter_email || 'Unknown'
   });
 
-  // Sort issues
-  const sortedIssues = [...filteredIssues].sort((a, b) => {
-    const aVal = a[sortBy as keyof Issue];
-    const bVal = b[sortBy as keyof Issue];
-    
-    if (sortOrder === "asc") {
-      return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-    } else {
-      return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
-    }
-  });
+  // Handle status update
+  const handleStatusUpdate = async (reportId: string, newStatus: string) => {
+    try {
+      const response = await ApiService.updateReportStatus(reportId, {
+        status: newStatus,
+        assigned_to: user?.full_name || 'System',
+        resolution_notes: `Status updated to ${newStatus}`
+      });
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIssues(sortedIssues.map(issue => issue.id));
-    } else {
-      setSelectedIssues([]);
-    }
-  };
-
-  const handleSelectIssue = (issueId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedIssues([...selectedIssues, issueId]);
-    } else {
-      setSelectedIssues(selectedIssues.filter(id => id !== issueId));
+      if (response.success) {
+        // Refresh the reports
+        await loadReports(currentPage, true);
+      } else {
+        setError(response.error || 'Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      setError('Failed to update status');
     }
   };
 
-  const handleBulkStatusUpdate = (newStatus: string) => {
-    setIssues(issues.map(issue => 
-      selectedIssues.includes(issue.id) 
-        ? { ...issue, status: newStatus as "open" | "in-progress" | "resolved" }
-        : issue
-    ));
-    setSelectedIssues([]);
+  // Handle refresh
+  const handleRefresh = () => {
+    loadReports(currentPage, true);
   };
 
-  const departments = [...new Set(issues.map(issue => issue.assignedDept))];
-  const isAllSelected = selectedIssues.length === sortedIssues.length && sortedIssues.length > 0;
-  const isSomeSelected = selectedIssues.length > 0;
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    loadReports(page);
+  };
+
+  // Get unique values for filters
+  const uniqueDepartments = [...new Set(reports.map(r => r.department))];
+  const uniqueCategories = [...new Set(reports.map(r => r.category))];
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'submitted': return 'bg-blue-100 text-blue-800';
+      case 'triaged': return 'bg-yellow-100 text-yellow-800';
+      case 'assigned': return 'bg-purple-100 text-purple-800';
+      case 'in_progress': return 'bg-orange-100 text-orange-800';
+      case 'resolved': return 'bg-green-100 text-green-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
+      case 'closed': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <span className="ml-2">Loading reports...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1>Issues Management</h1>
+          <h1 className="text-3xl font-bold">Issue Reports</h1>
           <p className="text-muted-foreground">
-            Manage and track all reported civic issues
+            Manage and track civic issue reports
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
-          <Button variant="outline" size="sm">
-            <Upload className="w-4 h-4 mr-2" />
-            Import
-          </Button>
-          <Button size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            New Issue
-          </Button>
+          <NewReportForm onReportCreated={handleRefresh} />
         </div>
       </div>
 
-      {/* Filters and Search */}
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          {error}
+        </div>
+      )}
+
+      {/* Filters */}
       <Card className="p-6">
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search issues by ID, category, location, description, or reporter..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="lg:col-span-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search reports..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
           </div>
 
-          {/* Filter Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="in-progress">In Progress</SelectItem>
-                <SelectItem value="resolved">Resolved</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Status Filter */}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="submitted">Submitted</SelectItem>
+              <SelectItem value="triaged">Triaged</SelectItem>
+              <SelectItem value="assigned">Assigned</SelectItem>
+              <SelectItem value="in_progress">In Progress</SelectItem>
+              <SelectItem value="resolved">Resolved</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
+            </SelectContent>
+          </Select>
 
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Priorities" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="high">High Priority</SelectItem>
-                <SelectItem value="medium">Medium Priority</SelectItem>
-                <SelectItem value="low">Low Priority</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Priority Filter */}
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priority</SelectItem>
+              <SelectItem value="urgent">Urgent</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+            </SelectContent>
+          </Select>
 
-            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Departments" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                {departments.map(dept => (
-                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={`${sortBy}-${sortOrder}`} onValueChange={(value) => {
-              const [field, order] = value.split('-');
-              setSortBy(field);
-              setSortOrder(order as "asc" | "desc");
-            }}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sort by..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dateReported-desc">Newest First</SelectItem>
-                <SelectItem value="dateReported-asc">Oldest First</SelectItem>
-                <SelectItem value="priority-desc">High Priority First</SelectItem>
-                <SelectItem value="status-asc">Status A-Z</SelectItem>
-                <SelectItem value="location-asc">Location A-Z</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Results Summary */}
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              Showing {sortedIssues.length} of {issues.length} issues
-            </span>
-            {isSomeSelected && (
-              <div className="flex items-center gap-3">
-                <span>{selectedIssues.length} selected</span>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleBulkStatusUpdate("in-progress")}
-                  >
-                    Mark In Progress
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleBulkStatusUpdate("resolved")}
-                  >
-                    Mark Resolved
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Department Filter */}
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
+              {uniqueDepartments.map(dept => (
+                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </Card>
 
-      {/* Issues Table */}
-      <Card className="p-6">
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={isAllSelected}
-                    onCheckedChange={handleSelectAll}
-                    indeterminate={isSomeSelected && !isAllSelected}
-                  />
-                </TableHead>
-                <TableHead className="w-32">Issue ID</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Date Reported</TableHead>
-                <TableHead>Assigned Department</TableHead>
-                <TableHead>Reporter</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedIssues.map((issue) => (
-                <TableRow 
-                  key={issue.id} 
-                  className="cursor-pointer hover:bg-muted/50"
-                >
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedIssues.includes(issue.id)}
-                      onCheckedChange={(checked) => handleSelectIssue(issue.id, checked as boolean)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </TableCell>
-                  <TableCell 
-                    className="font-medium"
-                    onClick={() => onIssueClick(issue)}
-                  >
-                    {issue.id}
-                  </TableCell>
-                  <TableCell onClick={() => onIssueClick(issue)}>
-                    {issue.category}
-                  </TableCell>
-                  <TableCell onClick={() => onIssueClick(issue)}>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-muted-foreground" />
-                      {issue.location}
-                    </div>
-                  </TableCell>
-                  <TableCell onClick={() => onIssueClick(issue)}>
-                    <Badge 
-                      variant="secondary" 
-                      className={getStatusColor(issue.status)}
-                    >
-                      {issue.status.replace("-", " ")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell onClick={() => onIssueClick(issue)}>
-                    <Badge 
-                      variant="secondary" 
-                      className={getPriorityColor(issue.priority)}
-                    >
-                      {issue.priority}
-                    </Badge>
-                  </TableCell>
-                  <TableCell onClick={() => onIssueClick(issue)}>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      {new Date(issue.dateReported).toLocaleDateString()}
-                    </div>
-                  </TableCell>
-                  <TableCell onClick={() => onIssueClick(issue)}>
-                    <div className="flex items-center gap-2">
-                      <UserCheck className="w-4 h-4 text-muted-foreground" />
-                      {issue.assignedDept}
-                    </div>
-                  </TableCell>
-                  <TableCell onClick={() => onIssueClick(issue)}>
-                    {issue.reporter}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => onIssueClick(issue)}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit Issue
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete Issue
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-
-        {sortedIssues.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No issues found matching your filters.</p>
-            <Button variant="outline" className="mt-4" onClick={() => {
-              setSearchTerm("");
-              setStatusFilter("all");
-              setPriorityFilter("all");
-              setDepartmentFilter("all");
-            }}>
-              Clear Filters
-            </Button>
+      {/* Reports Table */}
+      <Card>
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">
+              Reports ({filteredReports.length} of {totalReports})
+            </h3>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+            </div>
           </div>
-        )}
+
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox />
+                  </TableHead>
+                  <TableHead>Report ID</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Reporter</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="w-12"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredReports.map((report) => (
+                  <TableRow key={report.id} className="cursor-pointer hover:bg-gray-50">
+                    <TableCell>
+                      <Checkbox />
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {report.report_id}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {report.title}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{report.category}</Badge>
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      {report.location_text || 'Location not specified'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(report.status)}>
+                        {report.status.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getPriorityColor(report.priority)}>
+                        {report.priority}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{report.department}</TableCell>
+                    <TableCell>{report.users?.full_name || report.reporter_email}</TableCell>
+                    <TableCell>
+                      {new Date(report.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => onIssueClick(convertToIssue(report))}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleStatusUpdate(report.id, 'in_progress')}>
+                            <Clock className="w-4 h-4 mr-2" />
+                            Mark In Progress
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleStatusUpdate(report.id, 'resolved')}>
+                            <UserCheck className="w-4 h-4 mr-2" />
+                            Mark Resolved
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalReports)} of {totalReports} reports
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </Card>
     </div>
   );

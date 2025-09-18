@@ -3,45 +3,64 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
-import { Building2 } from "lucide-react";
+import { Building2, Loader2 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 interface LoginPageProps {
   onLogin: (userRole: "admin" | "department" | "department-employee" | "mandal-admin", department?: string, userName?: string, mandalName?: string) => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
 
-  // Simple demo user directory (replace with real API later)
-  const demoUsers = [
-    { username: "public", password: "public", role: "department" as const, department: "Public Works", name: "Priya Singh" },
-    { username: "water", password: "water", role: "department" as const, department: "Water Department", name: "Mike Chen" },
-    { username: "ravie", password: "ravie", role: "department-employee" as const, department: "Public Works", name: "Ravi Kumar" },
-    { username: "mandal", password: "mandal", role: "mandal-admin" as const, mandal: "Karimnagar", name: "Rajesh Kumar" },
-    { username: "hod", password: "hod", role: "department" as const, department: "Public Works", name: "Head of Department" },
+  // Demo credentials for testing
+  const demoCredentials = [
+    { email: "admin@civicsense.com", password: "admin123", role: "admin" as const, department: "Administration", name: "System Administrator" },
+    { email: "priya@civicsense.com", password: "admin123", role: "department" as const, department: "Public Works", name: "Priya Sharma" },
+    { email: "citizen@civicsense.com", password: "admin123", role: "citizen" as const, department: "Citizen", name: "Vikram Rao" },
   ];
 
-  const handleLogin = () => {
-    // Block any attempt to use the reserved admin username
-    if (username.trim().toLowerCase() === "admin") {
-      alert("Admin login is disabled.");
-      return;
-    }
-    const user = demoUsers.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
-    if (!user) {
-
-
-      alert("Invalid credentials. Try admin/admin, public/public, water/water, hod/hod, or mandal/mandal");
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setError("Please enter both email and password");
       return;
     }
 
-    if (user.role === "department") {
-      onLogin("department", user.department, user.name);
-    } else if (user.role === "department-employee") {
-      onLogin("department-employee", user.department, user.name);
-    } else {
-      onLogin("mandal-admin", undefined, user.name, user.mandal);
+    setIsLoading(true);
+    setError("");
+
+    try {
+      console.log("Attempting login with:", { email, password: "***" });
+      const result = await login(email, password);
+      console.log("Login result:", result);
+      
+      if (result.success) {
+        // Find the user role from demo credentials for UI purposes
+        const demoUser = demoCredentials.find(u => u.email === email);
+        if (demoUser) {
+          if (demoUser.role === "admin") {
+            onLogin("admin", demoUser.department, demoUser.name);
+          } else if (demoUser.role === "department") {
+            onLogin("department", demoUser.department, demoUser.name);
+          } else if (demoUser.role === "mandal-admin") {
+            onLogin("mandal-admin", undefined, demoUser.name, demoUser.mandal);
+          } else {
+            onLogin("department-employee", demoUser.department, demoUser.name);
+          }
+        }
+      } else {
+        console.error("Login failed:", result.error);
+        setError(result.error || "Login failed");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("Network error occurred");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,15 +78,22 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         </div>
 
         <div className="space-y-6">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              {error}
+            </div>
+          )}
 
-          {/* Username */}
+          {/* Email */}
           <div>
-            <label className="block mb-3">Username</label>
+            <label className="block mb-3">Email</label>
             <Input
-              type="text"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
             />
           </div>
 
@@ -79,6 +105,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
             />
           </div>
 
@@ -86,9 +113,16 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           <Button 
             className="w-full" 
             onClick={handleLogin}
-            disabled={!username || !password}
+            disabled={!email || !password || isLoading}
           >
-            Sign In
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Signing In...
+              </>
+            ) : (
+              "Sign In"
+            )}
           </Button>
 
           {/* Demo Info */}
@@ -96,12 +130,16 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <p className="text-sm text-muted-foreground mb-3">Demo Accounts</p>
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <Badge variant="secondary" className="bg-green-50 text-green-700">Department</Badge>
-                <span className="text-muted-foreground">public / public, water / water</span>
+                <Badge variant="secondary" className="bg-red-50 text-red-700">Admin</Badge>
+                <span className="text-muted-foreground">admin@civicsense.com / admin123</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <Badge variant="secondary" className="bg-purple-50 text-purple-700">Mandal Admin</Badge>
-                <span className="text-muted-foreground">mandal / mandal</span>
+                <Badge variant="secondary" className="bg-green-50 text-green-700">Department</Badge>
+                <span className="text-muted-foreground">priya@civicsense.com / admin123</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700">Citizen</Badge>
+                <span className="text-muted-foreground">citizen@civicsense.com / admin123</span>
               </div>
             </div>
           </div>

@@ -26,7 +26,10 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          return data;
+        }
       }
       return null;
     } catch (e) {
@@ -35,20 +38,37 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> register(String email, String password, String name) async {
+  static Future<Map<String, dynamic>?> register({
+    required String fullName,
+    required String email,
+    required String password,
+    String? mobile,
+    String language = 'English',
+    int usertypeId = 4,
+    String? department,
+    String? mandalArea,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/register'),
         headers: _headers,
         body: jsonEncode({
+          'fullName': fullName,
           'email': email,
           'password': password,
-          'name': name,
+          'mobile': mobile,
+          'language': language,
+          'usertype_id': usertypeId,
+          'department': department,
+          'mandal_area': mandalArea,
         }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          return data;
+        }
       }
       return null;
     } catch (e) {
@@ -104,11 +124,15 @@ class ApiService {
     required String title,
     required String description,
     required String category,
-    required String userId,
-    String? imageUrl,
+    required String department,
+    String? reporterEmail,
+    String? reporterUserId,
+    String? locationText,
     double? latitude,
     double? longitude,
-    String? address,
+    List<String>? photos,
+    String? voiceNoteUrl,
+    String priority = 'medium',
   }) async {
     try {
       final response = await http.post(
@@ -118,18 +142,34 @@ class ApiService {
           'title': title,
           'description': description,
           'category': category,
-          'reporter_name': userId, // Using reporter_name as per server structure
+          'department': department,
+          'reporter_email': reporterEmail,
+          'reporter_user_id': reporterUserId,
+          'location_text': locationText,
           'latitude': latitude,
           'longitude': longitude,
-          'location': address,
-          'images': imageUrl != null ? [imageUrl] : [],
+          'photos': photos?.map((url) => {'url': url, 'caption': ''}).toList() ?? [],
+          'voice_note_url': voiceNoteUrl,
+          'priority': priority,
         }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
-        if (responseData['success'] == true && responseData['report'] != null) {
-          return Issue.fromJson(responseData['report']);
+        if (responseData['success'] == true) {
+          // Convert the response to Issue format
+          return Issue.fromJson({
+            'id': responseData['reportId'],
+            'title': responseData['title'],
+            'description': description,
+            'category': category,
+            'location': locationText ?? 'Location not specified',
+            'status': 'submitted',
+            'priority': priority,
+            'dateReported': DateTime.now().toIso8601String().split('T')[0],
+            'assignedDept': department,
+            'reporter': reporterEmail ?? 'Unknown',
+          });
         }
       }
       return null;

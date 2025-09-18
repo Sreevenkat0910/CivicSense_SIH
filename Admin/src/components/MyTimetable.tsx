@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -53,6 +53,7 @@ import {
   Home
 } from "lucide-react";
 import { format } from "date-fns";
+import ApiService from "../services/api";
 
 // Mock data for timetable entries
 const mockTimetableEntries = [
@@ -249,13 +250,51 @@ const getTypeIcon = (type: string) => {
 };
 
 export function MyTimetable({ userRole, userName, userDepartment }: MyTimetableProps) {
-  const [timetableEntries, setTimetableEntries] = useState(mockTimetableEntries);
+  const [timetableEntries, setTimetableEntries] = useState<any[]>([]);
   const [jobAssignments, setJobAssignments] = useState(mockJobAssignments);
   const [activeTab, setActiveTab] = useState<"schedule" | "availability" | "jobs">("schedule");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch schedules from API
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        setLoading(true);
+        const response = await ApiService.getSchedules();
+        
+        if (response.success) {
+          // Transform API data to match timetable format
+          const transformedEntries = response.data.schedules.map((schedule: any) => ({
+            id: schedule.id,
+            title: schedule.title,
+            description: schedule.description,
+            startTime: format(new Date(schedule.start_time), 'HH:mm'),
+            endTime: format(new Date(schedule.end_time), 'HH:mm'),
+            date: schedule.start_time.split('T')[0],
+            location: schedule.location || 'Not specified',
+            status: 'scheduled', // Default status
+            type: schedule.is_recurring ? 'recurring' : 'one-time',
+            recurrence: schedule.recurrence_pattern || null
+          }));
+          setTimetableEntries(transformedEntries);
+        } else {
+          setError(response.error || 'Failed to fetch schedules');
+        }
+      } catch (err) {
+        setError('Network error occurred');
+        console.error('Schedules fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchedules();
+  }, []);
 
   // Filter entries based on search and status
   const filteredEntries = timetableEntries.filter(entry => {
