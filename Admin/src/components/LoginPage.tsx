@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Badge } from "./ui/badge";
 import { Building2 } from "lucide-react";
 
@@ -13,7 +12,6 @@ interface LoginPageProps {
 export function LoginPage({ onLogin }: LoginPageProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedAccess, setSelectedAccess] = useState<"admin" | "mandal-admin">("admin");
 
   // Simple demo user directory (replace with real API later)
   const demoUsers = [
@@ -24,11 +22,9 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   ];
 
   const handleLogin = () => {
-    const user = demoUsers
-      .filter(u => (selectedAccess === "admin" ? u.role === "admin" : u.role === "mandal-admin"))
-      .find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+    const user = demoUsers.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
     if (!user) {
-      alert("Invalid credentials for selected access. Try admin/admin or mandal/mandal");
+      alert("Invalid credentials. Try admin/admin, public/public, water/water, or mandal/mandal");
       return;
     }
 
@@ -55,20 +51,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         </div>
 
         <div className="space-y-6">
-
-          {/* Access Level */}
-          <div>
-            <label className="block mb-3">Access Level</label>
-            <Select value={selectedAccess} onValueChange={(v: "admin" | "mandal-admin") => setSelectedAccess(v)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select access" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="mandal-admin">Mandal Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
           {/* Username */}
           <div>

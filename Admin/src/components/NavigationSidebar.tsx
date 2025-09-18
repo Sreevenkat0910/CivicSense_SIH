@@ -22,7 +22,6 @@ interface NavigationSidebarProps {
 const adminNavItems = [
   { icon: Home, label: "Dashboard", page: "dashboard" },
   { icon: FileText, label: "Issues", page: "issues" },
-  { icon: BarChart3, label: "Analytics", page: "analytics" },
   { icon: Calendar, label: "Schedule", page: "schedule" },
   { icon: Building2, label: "Department View", page: "department" },
   { icon: Settings, label: "Settings", page: "settings" },
@@ -30,8 +29,6 @@ const adminNavItems = [
 
 const departmentNavItems = [
   { icon: Building2, label: "Department Dashboard", page: "department" },
-  { icon: FileText, label: "My Issues", page: "department-issues" },
-  { icon: BarChart3, label: "Department Reports", page: "department-reports" },
   { icon: Settings, label: "Settings", page: "settings" },
 ];
 
@@ -40,7 +37,6 @@ const mandalAdminNavItems = [
   { icon: Building2, label: "Department Management", page: "department-management" },
   { icon: Users, label: "User Management", page: "user-management" },
   { icon: Calendar, label: "Schedule", page: "mandal-schedule" },
-  { icon: BarChart3, label: "System Reports", page: "system-reports" },
   { icon: Settings, label: "System Settings", page: "system-settings" },
 ];
 
