@@ -24,6 +24,11 @@ function SetViewOnMount({ center, zoom }: { center: [number, number]; zoom: numb
   const map = useMap();
   React.useEffect(() => {
     map.setView(center, zoom);
+    map.scrollWheelZoom.enable();
+    map.dragging.enable();
+    map.doubleClickZoom.enable();
+    map.touchZoom.enable();
+    map.boxZoom.enable();
   }, [center, zoom, map]);
   return null;
 }
@@ -92,15 +97,12 @@ export function CityMapView({ onMarkerClick, issues }: CityMapViewProps) {
       </div>
       <div className="relative w-full h-full rounded-lg overflow-hidden">
         <MapContainer 
-          className="map-background"
           style={{ 
             height: "100%", 
             width: "100%",
-            zIndex: 0,
             position: "absolute",
             top: 0,
-            left: 0,
-            pointerEvents: "none"
+            left: 0
           }}
         >
           <SetViewOnMount center={defaultCenter} zoom={12} />
