@@ -85,7 +85,7 @@ class CivicSenseApp extends StatelessWidget {
                 ),
               ),
               // Less rounded corners
-              cardTheme: CardTheme(
+              cardTheme: CardThemeData(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

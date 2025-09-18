@@ -49,7 +49,7 @@ class _NearbyIssuesScreenState extends State<NearbyIssuesScreen> {
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -148,7 +148,7 @@ class _NearbyIssuesScreenState extends State<NearbyIssuesScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -238,7 +238,7 @@ class _NearbyIssuesScreenState extends State<NearbyIssuesScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: issue.status.color.withOpacity(0.1),
+                          color: issue.status.color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: issue.status.color),
                         ),
@@ -279,7 +279,7 @@ class _NearbyIssuesScreenState extends State<NearbyIssuesScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getPriorityColor(issue.priority).withOpacity(0.1),
+                          color: _getPriorityColor(issue.priority).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
