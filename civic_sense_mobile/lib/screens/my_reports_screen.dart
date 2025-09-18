@@ -4,7 +4,7 @@ import '../providers/issue_provider.dart';
 import '../widgets/issue_list_item.dart';
 
 class MyReportsScreen extends StatelessWidget {
-  const MyReportsScreen({Key? key}) : super(key: key);
+  const MyReportsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

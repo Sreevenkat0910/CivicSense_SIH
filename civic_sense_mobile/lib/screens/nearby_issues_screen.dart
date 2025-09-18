@@ -7,7 +7,7 @@ import '../widgets/issue_list_item.dart';
 import '../models/issue.dart';
 
 class NearbyIssuesScreen extends StatefulWidget {
-  const NearbyIssuesScreen({Key? key}) : super(key: key);
+  const NearbyIssuesScreen({super.key});
 
   @override
   State<NearbyIssuesScreen> createState() => _NearbyIssuesScreenState();

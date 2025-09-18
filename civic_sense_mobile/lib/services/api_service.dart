@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
 import '../models/issue.dart';
 
 class ApiService {
   static const String baseUrl = 'http://192.168.1.8:4000'; // Your backend URL
+  static final Logger _logger = Logger();
   
   // Headers
   static Map<String, String> get _headers => {
@@ -28,7 +30,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Login error: $e');
+      _logger.e('Login error: $e');
       return null;
     }
   }
@@ -50,7 +52,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Register error: $e');
+      _logger.e('Register error: $e');
       return null;
     }
   }
@@ -72,7 +74,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      print('Get issues error: $e');
+      _logger.e('Get issues error: $e');
       return [];
     }
   }
@@ -93,7 +95,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      print('Get my reports error: $e');
+      _logger.e('Get my reports error: $e');
       return [];
     }
   }
@@ -132,7 +134,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Submit issue error: $e');
+      _logger.e('Submit issue error: $e');
       return null;
     }
   }
@@ -149,7 +151,7 @@ class ApiService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Upvote issue error: $e');
+      _logger.e('Upvote issue error: $e');
       return false;
     }
   }
@@ -170,7 +172,7 @@ class ApiService {
       }
       return [];
     } catch (e) {
-      print('Get nearby issues error: $e');
+      _logger.e('Get nearby issues error: $e');
       return [];
     }
   }
@@ -196,7 +198,7 @@ class ApiService {
       }
       return null;
     } catch (e) {
-      print('Upload image error: $e');
+      _logger.e('Upload image error: $e');
       return null;
     }
   }

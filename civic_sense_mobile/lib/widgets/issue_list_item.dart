@@ -7,11 +7,11 @@ class IssueListItem extends StatelessWidget {
   final VoidCallback? onTap;
 
   const IssueListItem({
-    Key? key,
+    super.key,
     required this.issue,
     this.showDistance = false,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

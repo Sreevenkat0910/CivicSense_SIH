@@ -12,6 +12,7 @@ class Issue {
   final double latitude;
   final double longitude;
   final List<String> images;
+  final String? audioPath;
   final String reporterName;
   final String reporterEmail;
   final String reporterMobile;
@@ -34,6 +35,7 @@ class Issue {
     required this.latitude,
     required this.longitude,
     required this.images,
+    this.audioPath,
     required this.reporterName,
     required this.reporterEmail,
     required this.reporterMobile,
@@ -61,6 +63,7 @@ class Issue {
       latitude: (json['latitude'] ?? 0.0).toDouble(),
       longitude: (json['longitude'] ?? 0.0).toDouble(),
       images: List<String>.from(json['images'] ?? []),
+      audioPath: json['audio_path'],
       reporterName: json['reporter_name'] ?? '',
       reporterEmail: json['reporter_email'] ?? '',
       reporterMobile: json['reporter_mobile'] ?? '',
@@ -86,6 +89,7 @@ class Issue {
       'latitude': latitude,
       'longitude': longitude,
       'images': images,
+      'audio_path': audioPath,
       'reporter_name': reporterName,
       'reporter_email': reporterEmail,
       'reporter_mobile': reporterMobile,

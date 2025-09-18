@@ -27,7 +27,7 @@ void main() async {
 class CivicSenseApp extends StatelessWidget {
   final SharedPreferences prefs;
   
-  const CivicSenseApp({Key? key, required this.prefs}) : super(key: key);
+  const CivicSenseApp({super.key, required this.prefs});
 
   @override
   Widget build(BuildContext context) {

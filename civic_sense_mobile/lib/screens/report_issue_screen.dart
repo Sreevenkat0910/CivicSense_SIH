@@ -1,14 +1,16 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:flutter/foundation.dart';
 import '../providers/issue_provider.dart';
 import '../models/issue.dart';
 
 class ReportIssueScreen extends StatefulWidget {
-  const ReportIssueScreen({Key? key}) : super(key: key);
+  const ReportIssueScreen({super.key});
 
   @override
   State<ReportIssueScreen> createState() => _ReportIssueScreenState();
@@ -19,13 +21,17 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
+  // final AudioRecorder _audioRecorder = AudioRecorder();
   
   String _selectedCategory = IssueCategory.categories[0];
   String? _imagePath;
+  String? _audioPath;
   String? _currentAddress;
   double? _latitude;
   double? _longitude;
   bool _isLoadingLocation = false;
+  bool _isRecording = false;
+  Duration _recordingDuration = Duration.zero;
 
   @override
   Widget build(BuildContext context) {
@@ -249,10 +255,69 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                         width: double.infinity,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
-                          image: DecorationImage(
-                            image: AssetImage(_imagePath!),
-                            fit: BoxFit.cover,
-                          ),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: kIsWeb
+                              ? Image.network(
+                                  _imagePath!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: const Color(0xFFF3F4F6),
+                                      child: const Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.image_not_supported,
+                                              color: Color(0xFF6B7280),
+                                              size: 48,
+                                            ),
+                                            SizedBox(height: 8),
+                                            Text(
+                                              'Image preview not available',
+                                              style: TextStyle(
+                                                color: Color(0xFF6B7280),
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                )
+                              : Image.file(
+                                  File(_imagePath!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: const Color(0xFFF3F4F6),
+                                      child: const Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.image_not_supported,
+                                              color: Color(0xFF6B7280),
+                                              size: 48,
+                                            ),
+                                            SizedBox(height: 8),
+                                            Text(
+                                              'Image preview not available',
+                                              style: TextStyle(
+                                                color: Color(0xFF6B7280),
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -286,6 +351,117 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
                             ),
                           ),
                         ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Audio Recording Section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Voice Note (Optional)',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_audioPath != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.audiotrack,
+                              color: Color(0xFF6B7280),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Audio recording (${_formatDuration(_recordingDuration)})',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF6B7280),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _deleteAudio,
+                              icon: const Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                                size: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _isRecording ? _stopRecording : _startRecording,
+                            icon: Icon(_isRecording ? Icons.stop : Icons.mic),
+                            label: Text(_isRecording ? 'Stop Recording' : 'Record Audio'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _isRecording ? Colors.red : Colors.blue,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (_isRecording) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatDuration(_recordingDuration),
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],
@@ -341,11 +517,14 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       _isLoadingLocation = true;
     });
 
+    // Store context before async operations
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
     try {
       // Check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           const SnackBar(
             content: Text('Location services are disabled. Please enable them.'),
             backgroundColor: Colors.red,
@@ -359,7 +538,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             const SnackBar(
               content: Text('Location permissions are denied.'),
               backgroundColor: Colors.red,
@@ -370,7 +549,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       }
 
       if (permission == LocationPermission.deniedForever) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           const SnackBar(
             content: Text('Location permissions are permanently denied.'),
             backgroundColor: Colors.red,
@@ -402,7 +581,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text('Error getting location: $e'),
           backgroundColor: Colors.red,
@@ -426,16 +605,27 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       
       if (image != null) {
         setState(() {
-          _imagePath = image.path;
+          _imagePath = kIsWeb ? image.path : image.path;
         });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Photo selected successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error taking photo: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error taking photo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -450,17 +640,117 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
       
       if (image != null) {
         setState(() {
-          _imagePath = image.path;
+          _imagePath = kIsWeb ? image.path : image.path;
         });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image selected successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       }
     } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _startRecording() async {
+    if (kIsWeb) {
+      // Web implementation using MediaRecorder API
+      try {
+        setState(() {
+          _isRecording = true;
+          _recordingDuration = Duration.zero;
+        });
+        
+        // Start timer for recording duration
+        _startRecordingTimer();
+        
+        // For web, we'll simulate recording since MediaRecorder API is complex
+        // In a real implementation, you'd use dart:html to access MediaRecorder
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Recording started (Web simulation)'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error starting recording: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else {
+      // Mobile implementation would go here
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking image: $e'),
-          backgroundColor: Colors.red,
+        const SnackBar(
+          content: Text('Microphone recording not available on this platform'),
+          backgroundColor: Colors.orange,
         ),
       );
     }
+  }
+
+  Future<void> _stopRecording() async {
+    if (kIsWeb) {
+      try {
+        setState(() {
+          _isRecording = false;
+          _audioPath = 'web_audio_${DateTime.now().millisecondsSinceEpoch}.webm';
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Recording stopped (Web simulation)'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error stopping recording: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _startRecordingTimer() {
+    Future.delayed(const Duration(seconds: 1), () {
+      if (_isRecording) {
+        setState(() {
+          _recordingDuration = Duration(seconds: _recordingDuration.inSeconds + 1);
+        });
+        _startRecordingTimer();
+      }
+    });
+  }
+
+  void _deleteAudio() {
+    setState(() {
+      _audioPath = null;
+      _recordingDuration = Duration.zero;
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 
   void _submitIssue() async {
@@ -482,6 +772,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
         description: _descriptionController.text.trim(),
         category: _selectedCategory,
         imagePath: _imagePath,
+        audioPath: _audioPath,
         latitude: _latitude,
         longitude: _longitude,
         address: _currentAddress,
@@ -510,6 +801,7 @@ class _ReportIssueScreenState extends State<ReportIssueScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    // _audioRecorder.dispose();
     super.dispose();
   }
 }

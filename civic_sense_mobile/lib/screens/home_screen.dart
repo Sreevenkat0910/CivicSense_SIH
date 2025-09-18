@@ -9,7 +9,7 @@ import '../providers/issue_provider.dart';
 import '../widgets/issue_list_item.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -80,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
 class HomeTab extends StatelessWidget {
   final Function(int) onTabChange;
   
-  const HomeTab({Key? key, required this.onTabChange}) : super(key: key);
+  const HomeTab({super.key, required this.onTabChange});
 
   @override
   Widget build(BuildContext context) {

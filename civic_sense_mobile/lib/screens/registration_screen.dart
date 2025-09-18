@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 
 class RegistrationScreen extends StatefulWidget {
-  const RegistrationScreen({Key? key}) : super(key: key);
+  const RegistrationScreen({super.key});
 
   @override
   State<RegistrationScreen> createState() => _RegistrationScreenState();
