@@ -18,8 +18,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeTab(),
+  List<Widget> get _screens => [
+    HomeTab(onTabChange: (index) {
+      setState(() {
+        _currentIndex = index;
+      });
+    }),
     const NearbyIssuesScreen(),
     const MyReportsScreen(),
     const ProfileScreen(),
@@ -74,7 +78,9 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class HomeTab extends StatelessWidget {
-  const HomeTab({Key? key}) : super(key: key);
+  final Function(int) onTabChange;
+  
+  const HomeTab({Key? key, required this.onTabChange}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -184,10 +190,7 @@ class HomeTab extends StatelessWidget {
                         title: 'Nearby Issues',
                         onTap: () {
                           // Switch to nearby tab
-                          final homeScreen = context.findAncestorStateOfType<_HomeScreenState>();
-                          homeScreen?.setState(() {
-                            homeScreen._currentIndex = 1;
-                          });
+                          onTabChange(1);
                         },
                       ),
                     ),
@@ -211,10 +214,7 @@ class HomeTab extends StatelessWidget {
                     TextButton(
                       onPressed: () {
                         // Switch to nearby tab
-                        final homeScreen = context.findAncestorStateOfType<_HomeScreenState>();
-                        homeScreen?.setState(() {
-                          homeScreen._currentIndex = 1;
-                        });
+                        onTabChange(1);
                       },
                       child: const Text(
                         'View All',

@@ -53,7 +53,7 @@ class IssueListItem extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: _getPriorityColor(issue.priority).withOpacity(0.1),
+                    color: _getPriorityColor(issue.priority).withValues(alpha: 0.1),
                     border: Border.all(color: _getPriorityColor(issue.priority)),
                   ),
                   child: Text(
