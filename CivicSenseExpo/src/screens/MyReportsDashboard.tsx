@@ -10,7 +10,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface Report {
   id: string;
@@ -136,7 +136,7 @@ export const MyReportsDashboard: React.FC<MyReportsDashboardProps> = ({
           <Text style={styles.reportCategory}>{report.category}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(report.status) + '20' }]}>
-          <Icon 
+          <MaterialIcons 
             name={getStatusIcon(report.status)} 
             size={16} 
             color={getStatusColor(report.status)} 
@@ -191,7 +191,7 @@ export const MyReportsDashboard: React.FC<MyReportsDashboardProps> = ({
           style={styles.viewDetailsButton}
           onPress={() => handleViewDetails(report)}
         >
-          <Icon name="visibility" size={16} color="#3b82f6" />
+          <MaterialIcons name="visibility" size={16} color="#3b82f6" />
           <Text style={styles.viewDetailsText}>View Details</Text>
         </TouchableOpacity>
       </View>
@@ -201,7 +201,7 @@ export const MyReportsDashboard: React.FC<MyReportsDashboardProps> = ({
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <View style={styles.emptyIconContainer}>
-        <Icon name="message" size={32} color="#9ca3af" />
+        <MaterialIcons name="message" size={32} color="#9ca3af" />
       </View>
       <Text style={styles.emptyTitle}>No Reports Yet</Text>
       <Text style={styles.emptySubtitle}>You haven't submitted any issues yet. Tap the "Report Issue" button to get started!</Text>
@@ -262,7 +262,7 @@ export const MyReportsDashboard: React.FC<MyReportsDashboardProps> = ({
               style={styles.filterButton}
               onPress={() => setShowFilters(!showFilters)}
             >
-              <Icon name="filter-list" size={20} color="#3b82f6" />
+              <MaterialIcons name="filter-list" size={20} color="#3b82f6" />
               <Text style={styles.filterButtonText}>Filter & Sort</Text>
             </TouchableOpacity>
           </View>
@@ -298,7 +298,7 @@ export const MyReportsDashboard: React.FC<MyReportsDashboardProps> = ({
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{selectedReport.title}</Text>
                 <TouchableOpacity onPress={handleCloseModal}>
-                  <Icon name="close" size={24} color="#6b7280" />
+                  <MaterialIcons name="close" size={24} color="#6b7280" />
                 </TouchableOpacity>
               </View>
               <ScrollView style={styles.modalBody}>

@@ -7,7 +7,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface ProfileScreenProps {
   user: {
@@ -73,10 +73,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ user, onLogout }) 
     >
       <View style={styles.optionContent}>
         <View style={styles.optionIcon}>
-          <Icon name={option.icon} size={24} color="#3b82f6" />
+          <MaterialIcons name={option.icon} size={24} color="#3b82f6" />
         </View>
         <Text style={styles.optionTitle}>{option.title}</Text>
-        <Icon name="chevron-right" size={20} color="#9ca3af" />
+        <MaterialIcons name="chevron-right" size={20} color="#9ca3af" />
       </View>
     </TouchableOpacity>
   );
@@ -87,7 +87,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ user, onLogout }) 
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            <Icon name="person" size={40} color="#ffffff" />
+            <MaterialIcons name="person" size={40} color="#ffffff" />
           </View>
           <Text style={styles.userName}>{user.full_name}</Text>
           <Text style={styles.userEmail}>{user.email}</Text>
@@ -103,7 +103,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ user, onLogout }) 
 
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Icon name="logout" size={20} color="#ef4444" />
+          <MaterialIcons name="logout" size={20} color="#ef4444" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
 

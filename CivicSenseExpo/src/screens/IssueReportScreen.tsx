@@ -11,12 +11,10 @@ import {
   Modal,
   FlatList,
   KeyboardAvoidingView,
-  Platform,
-  PermissionsAndroid,
   Dimensions,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType } from 'react-native-image-picker';
+import { MaterialIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   useSharedValue,
@@ -99,27 +97,6 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
     formOpacity.value = withTiming(1, { duration: 600, delay: 200 });
   }, []);
 
-  const requestCameraPermission = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          {
-            title: 'Camera Permission',
-            message: 'CivicSense needs access to your camera to take photos of issues',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          },
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        console.warn(err);
-        return false;
-      }
-    }
-    return true;
-  };
 
   const handlePhotoUpload = () => {
     Alert.alert(
@@ -134,62 +111,73 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
   };
 
   const openCamera = async () => {
-    const hasPermission = await requestCameraPermission();
-    if (!hasPermission) return;
+    try {
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert('Permission Required', 'Camera permission is required to take photos');
+        return;
+      }
 
-    const options = {
-      mediaType: 'photo' as MediaType,
-      quality: 0.8,
-      maxWidth: 1000,
-      maxHeight: 1000,
-      includeBase64: false,
-    };
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
 
-    launchCamera(options, (response: ImagePickerResponse) => {
-      if (response.assets && response.assets[0]) {
-        const asset = response.assets[0];
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
         const photoObject = {
-          url: asset.uri!,
-          caption: '', // User can add caption later if needed
+          url: asset.uri,
+          caption: '',
           fileName: asset.fileName || `photo_${Date.now()}.jpg`,
           type: asset.type || 'image/jpeg',
           size: asset.fileSize || 0,
         };
         
-        // Show preview modal instead of directly adding
         setPreviewPhoto(photoObject);
         setShowPhotoPreview(true);
       }
-    });
+    } catch (error) {
+      console.error('Camera error:', error);
+      Alert.alert('Error', 'Failed to open camera');
+    }
   };
 
-  const openImageLibrary = () => {
-    const options = {
-      mediaType: 'photo' as MediaType,
-      quality: 0.8,
-      maxWidth: 1000,
-      maxHeight: 1000,
-      selectionLimit: 3 - formData.photos.length,
-      includeBase64: false,
-    };
+  const openImageLibrary = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (permissionResult.granted === false) {
+        Alert.alert('Permission Required', 'Photo library permission is required to select photos');
+        return;
+      }
 
-    launchImageLibrary(options, (response: ImagePickerResponse) => {
-      if (response.assets) {
-        const photoObjects = response.assets.map(asset => ({
-          url: asset.uri!,
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+        selectionLimit: 3 - formData.photos.length,
+      });
+
+      if (!result.canceled && result.assets.length > 0) {
+        const photoObjects = result.assets.map(asset => ({
+          url: asset.uri,
           caption: '',
           fileName: asset.fileName || `photo_${Date.now()}.jpg`,
           type: asset.type || 'image/jpeg',
           size: asset.fileSize || 0,
         }));
         
-        // Show preview modal for the first selected photo
-        if (photoObjects.length > 0) {
-          setPreviewPhoto(photoObjects[0]);
-          setShowPhotoPreview(true);
-        }
+        setPreviewPhoto(photoObjects[0]);
+        setShowPhotoPreview(true);
       }
-    });
+    } catch (error) {
+      console.error('Image library error:', error);
+      Alert.alert('Error', 'Failed to open photo library');
+    }
   };
 
   const removePhoto = (index: number) => {
@@ -314,7 +302,7 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
     >
       <KeyboardAvoidingView 
         style={styles.keyboardContainer} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior="padding"
       >
         <ScrollView 
           style={styles.scrollView} 
@@ -399,7 +387,7 @@ export const IssueReportScreen: React.FC<IssueReportScreenProps> = ({ onSubmit }
                     colors={formData.title && formData.description && formData.category ? ['#3b82f6', '#1d4ed8'] : ['#9ca3af', '#6b7280']}
                     style={styles.submitButtonGradient}
                   >
-                    <Icon name="cloud-upload" size={20} color="#ffffff" />
+                    <MaterialIcons name="cloud-upload" size={20} color="#ffffff" />
                     <Text style={styles.submitButtonText}>Submit Report</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -453,7 +441,7 @@ const AnimatedInputField = ({ label, placeholder, value, onChangeText, icon, del
     <Animated.View style={[styles.inputContainer, animatedStyle]}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.inputWrapper}>
-        <Icon name={icon} size={20} color="#6b7280" style={styles.inputIcon} />
+        <MaterialIcons name={icon} size={20} color="#6b7280" style={styles.inputMaterialIcons} />
         <TextInput
           style={styles.input}
           placeholder={placeholder}
@@ -492,7 +480,7 @@ const AnimatedCategorySelector = ({ label, selectedCategory, onPress, delay = 0 
         <Text style={[styles.categoryText, !selectedCategory && styles.placeholderText]}>
           {selectedCategory || 'Select issue category'}
         </Text>
-        <Icon name="keyboard-arrow-down" size={24} color="#6b7280" />
+        <MaterialIcons name="keyboard-arrow-down" size={24} color="#6b7280" />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -565,7 +553,7 @@ const AnimatedLocationField = ({ label, placeholder, value, onChangeText, onLoca
           onChangeText={onChangeText}
         />
         <TouchableOpacity style={styles.locationButton} onPress={onLocationPress}>
-          <Icon name="my-location" size={20} color="#3b82f6" />
+          <MaterialIcons name="my-location" size={20} color="#3b82f6" />
         </TouchableOpacity>
       </View>
     </Animated.View>
@@ -599,14 +587,14 @@ const AnimatedPhotoSection = ({ photos, onAddPhoto, onRemovePhoto, delay = 0, an
                 style={styles.removePhotoButton}
                 onPress={() => onRemovePhoto(index)}
               >
-                <Icon name="close" size={16} color="#ffffff" />
+                <MaterialIcons name="close" size={16} color="#ffffff" />
               </TouchableOpacity>
             </View>
           ))}
         </Animated.View>
         {photos.length < 3 && (
           <TouchableOpacity style={styles.addPhotoButton} onPress={onAddPhoto}>
-            <Icon name="camera-alt" size={24} color="#3b82f6" />
+            <MaterialIcons name="camera-alt" size={24} color="#3b82f6" />
             <Text style={styles.addPhotoText}>
               Add Photos ({photos.length}/3)
             </Text>
@@ -640,7 +628,7 @@ const AnimatedVoiceSection = ({ isRecording, voiceNote, onRecord, onRemove, dela
           style={[styles.voiceButton, isRecording && styles.voiceButtonRecording]}
           onPress={onRecord}
         >
-          <Icon 
+          <MaterialIcons 
             name={isRecording ? "stop" : "mic"} 
             size={20} 
             color={isRecording ? "#ffffff" : "#3b82f6"} 
@@ -653,7 +641,7 @@ const AnimatedVoiceSection = ({ isRecording, voiceNote, onRecord, onRemove, dela
           <View style={styles.voiceNoteBadge}>
             <Text style={styles.voiceNoteText}>Voice note recorded</Text>
             <TouchableOpacity onPress={onRemove}>
-              <Icon name="close" size={16} color="#6b7280" />
+              <MaterialIcons name="close" size={16} color="#6b7280" />
             </TouchableOpacity>
           </View>
         )}
@@ -697,7 +685,7 @@ const AnimatedCategoryModal = ({ visible, onClose, categories, selectedCategory,
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Select Category</Text>
             <TouchableOpacity onPress={onClose}>
-              <Icon name="close" size={24} color="#6b7280" />
+              <MaterialIcons name="close" size={24} color="#6b7280" />
             </TouchableOpacity>
           </View>
           <FlatList
@@ -718,7 +706,7 @@ const AnimatedCategoryModal = ({ visible, onClose, categories, selectedCategory,
                   {item}
                 </Text>
                 {item === selectedCategory && (
-                  <Icon name="check" size={20} color="#3b82f6" />
+                  <MaterialIcons name="check" size={20} color="#3b82f6" />
                 )}
               </TouchableOpacity>
             )}
@@ -771,7 +759,7 @@ const PhotoPreviewModal = ({ visible, photo, onConfirm, onDiscard }: {
           <View style={styles.photoPreviewHeader}>
             <Text style={styles.photoPreviewTitle}>Preview Photo</Text>
             <TouchableOpacity onPress={onDiscard} style={styles.closeButton}>
-              <Icon name="close" size={24} color="#6b7280" />
+              <MaterialIcons name="close" size={24} color="#6b7280" />
             </TouchableOpacity>
           </View>
           
@@ -784,12 +772,12 @@ const PhotoPreviewModal = ({ visible, photo, onConfirm, onDiscard }: {
           
           <View style={styles.photoPreviewActions}>
             <TouchableOpacity style={styles.discardButton} onPress={onDiscard}>
-              <Icon name="delete" size={20} color="#ef4444" />
+              <MaterialIcons name="delete" size={20} color="#ef4444" />
               <Text style={styles.discardButtonText}>Discard</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-              <Icon name="check" size={20} color="#ffffff" />
+              <MaterialIcons name="check" size={20} color="#ffffff" />
               <Text style={styles.confirmButtonText}>Use Photo</Text>
             </TouchableOpacity>
           </View>
@@ -859,7 +847,7 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     fontWeight: '500',
   },
-  inputIcon: {
+  inputMaterialIcons: {
     marginRight: 12,
   },
   textArea: {

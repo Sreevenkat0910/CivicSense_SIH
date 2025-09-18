@@ -13,7 +13,7 @@ import {
   Modal,
   FlatList,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface RegistrationScreenProps {
   onRegister: (userData: {
@@ -180,7 +180,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
           {/* Error Alert */}
           {error && (
             <View style={styles.errorContainer}>
-              <Icon name="error" size={20} color="#ef4444" />
+              <MaterialIcons name="error" size={20} color="#ef4444" />
               <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
@@ -191,7 +191,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Full Name *</Text>
               <View style={[styles.inputWrapper, fieldErrors.name && styles.inputError]}>
-                <Icon name="person" size={20} color="#6b7280" style={styles.inputIcon} />
+                <MaterialIcons name="person" size={20} color="#6b7280" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your full name"
@@ -211,7 +211,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email Address *</Text>
               <View style={[styles.inputWrapper, fieldErrors.email && styles.inputError]}>
-                <Icon name="email" size={20} color="#6b7280" style={styles.inputIcon} />
+                <MaterialIcons name="email" size={20} color="#6b7280" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your email"
@@ -233,7 +233,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Mobile Number (Optional)</Text>
               <View style={[styles.inputWrapper, fieldErrors.mobile && styles.inputError]}>
-                <Icon name="phone" size={20} color="#6b7280" style={styles.inputIcon} />
+                <MaterialIcons name="phone" size={20} color="#6b7280" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter 10-digit mobile number"
@@ -257,9 +257,9 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
                 onPress={() => setShowLanguageModal(true)}
                 disabled={isLoading}
               >
-                <Icon name="language" size={20} color="#6b7280" style={styles.inputIcon} />
+                <MaterialIcons name="language" size={20} color="#6b7280" style={styles.inputIcon} />
                 <Text style={styles.languageText}>{selectedLanguage?.name}</Text>
-                <Icon name="keyboard-arrow-down" size={20} color="#6b7280" />
+                <MaterialIcons name="keyboard-arrow-down" size={20} color="#6b7280" />
               </TouchableOpacity>
             </View>
 
@@ -267,7 +267,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Password *</Text>
               <View style={[styles.inputWrapper, fieldErrors.password && styles.inputError]}>
-                <Icon name="lock" size={20} color="#6b7280" style={styles.inputIcon} />
+                <MaterialIcons name="lock" size={20} color="#6b7280" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Create a strong password"
@@ -284,7 +284,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
                   onPress={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
-                  <Icon 
+                  <MaterialIcons 
                     name={showPassword ? "visibility-off" : "visibility"} 
                     size={20} 
                     color="#6b7280" 
@@ -300,7 +300,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Confirm Password *</Text>
               <View style={[styles.inputWrapper, fieldErrors.confirmPassword && styles.inputError]}>
-                <Icon name="lock" size={20} color="#6b7280" style={styles.inputIcon} />
+                <MaterialIcons name="lock" size={20} color="#6b7280" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Confirm your password"
@@ -317,7 +317,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   disabled={isLoading}
                 >
-                  <Icon 
+                  <MaterialIcons 
                     name={showConfirmPassword ? "visibility-off" : "visibility"} 
                     size={20} 
                     color="#6b7280" 
@@ -342,7 +342,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
                 </View>
               ) : (
                 <View style={styles.submitButtonContent}>
-                  <Icon name="person-add" size={20} color="#ffffff" />
+                  <MaterialIcons name="person-add" size={20} color="#ffffff" />
                   <Text style={styles.submitButtonText}>Create Account</Text>
                 </View>
               )}
@@ -378,7 +378,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Language</Text>
               <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
-                <Icon name="close" size={24} color="#6b7280" />
+                <MaterialIcons name="close" size={24} color="#6b7280" />
               </TouchableOpacity>
             </View>
             <FlatList
@@ -399,7 +399,7 @@ export const RegistrationScreen: React.FC<RegistrationScreenProps> = ({
                     {item.name}
                   </Text>
                   {item.code === formData.language && (
-                    <Icon name="check" size={20} color="#3b82f6" />
+                    <MaterialIcons name="check" size={20} color="#3b82f6" />
                   )}
                 </TouchableOpacity>
               )}

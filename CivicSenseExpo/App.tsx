@@ -4,7 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar, Alert, Platform, View, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialMaterialIconss } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Import screens
@@ -185,7 +185,7 @@ const MainTabNavigator = ({ user, onLogout }: { user: User; onLogout: () => void
   <Tab.Navigator
     screenOptions={({ route }) => ({
       headerShown: false,
-      tabBarIcon: ({ focused, color, size }) => {
+      tabBarMaterialIcons: ({ focused, color, size }) => {
         let iconName: string;
         switch (route.name) {
           case 'Map': iconName = 'map'; break;
@@ -194,7 +194,7 @@ const MainTabNavigator = ({ user, onLogout }: { user: User; onLogout: () => void
           case 'Profile': iconName = 'person'; break;
           default: iconName = 'map';
         }
-        return <Icon name={iconName} size={size} color={color} />;
+        return <MaterialIcons name={iconName} size={size} color={color} />;
       },
       tabBarActiveTintColor: '#3b82f6',
       tabBarInactiveTintColor: '#6b7280',

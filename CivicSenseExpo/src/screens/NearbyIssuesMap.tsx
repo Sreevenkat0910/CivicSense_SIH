@@ -10,7 +10,7 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -122,7 +122,7 @@ export const NearbyIssuesMap: React.FC<NearbyIssuesMapProps> = ({
       ]}
       onPress={() => setSelectedIssue(issue)}
     >
-      <Icon name="place" size={12} color="#ffffff" />
+      <MaterialIcons name="place" size={12} color="#ffffff" />
     </TouchableOpacity>
   );
 
@@ -144,7 +144,7 @@ export const NearbyIssuesMap: React.FC<NearbyIssuesMapProps> = ({
             { backgroundColor: getPriorityColor(issue.priority) }
           ]} />
           <Text style={styles.upvoteCount}>{issue.upvotes}</Text>
-          <Icon name="thumb-up" size={12} color="#6b7280" />
+          <MaterialIcons name="thumb-up" size={12} color="#6b7280" />
         </View>
       </View>
     </TouchableOpacity>
@@ -214,7 +214,7 @@ export const NearbyIssuesMap: React.FC<NearbyIssuesMapProps> = ({
                 style={styles.closeButton}
                 onPress={() => setSelectedIssue(null)}
               >
-                <Icon name="close" size={20} color="#6b7280" />
+                <MaterialIcons name="close" size={20} color="#6b7280" />
               </TouchableOpacity>
             </View>
 
@@ -223,7 +223,7 @@ export const NearbyIssuesMap: React.FC<NearbyIssuesMapProps> = ({
                 styles.statusBadge, 
                 { backgroundColor: getStatusColor(selectedIssue.status) + '20' }
               ]}>
-                <Icon 
+                <MaterialIcons 
                   name={getStatusIcon(selectedIssue.status)} 
                   size={12} 
                   color={getStatusColor(selectedIssue.status)} 
@@ -253,7 +253,7 @@ export const NearbyIssuesMap: React.FC<NearbyIssuesMapProps> = ({
                 style={styles.upvoteButton}
                 onPress={() => handleUpvote(selectedIssue.id)}
               >
-                <Icon name="thumb-up" size={16} color="#3b82f6" />
+                <MaterialIcons name="thumb-up" size={16} color="#3b82f6" />
                 <Text style={styles.upvoteButtonText}>{selectedIssue.upvotes}</Text>
               </TouchableOpacity>
             </View>
@@ -272,7 +272,7 @@ export const NearbyIssuesMap: React.FC<NearbyIssuesMapProps> = ({
                 <Text style={styles.showMoreText}>
                   {showAllIssues ? 'Show Less' : 'Show All'}
                 </Text>
-                <Icon 
+                <MaterialIcons 
                   name={showAllIssues ? 'expand-less' : 'expand-more'} 
                   size={16} 
                   color="#3b82f6" 

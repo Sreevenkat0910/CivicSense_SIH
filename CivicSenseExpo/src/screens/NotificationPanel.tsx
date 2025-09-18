@@ -8,7 +8,7 @@ import {
   FlatList,
   ScrollView,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface Notification {
   id: string;
@@ -85,7 +85,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
     >
       <View style={styles.notificationContent}>
         <View style={styles.notificationIcon}>
-          <Icon 
+          <MaterialIcons 
             name={getNotificationIcon(notification.type)} 
             size={20} 
             color={getNotificationColor(notification.type)} 
@@ -119,7 +119,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Icon name="info" size={48} color="#9ca3af" style={styles.emptyIcon} />
+      <MaterialIcons name="info" size={48} color="#9ca3af" style={styles.emptyIcon} />
       <Text style={styles.emptyText}>No notifications yet</Text>
     </View>
   );
@@ -153,7 +153,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                <Icon name="close" size={20} color="#6b7280" />
+                <MaterialIcons name="close" size={20} color="#6b7280" />
               </TouchableOpacity>
             </View>
           </View>

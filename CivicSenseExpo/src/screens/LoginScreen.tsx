@@ -11,7 +11,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface LoginScreenProps {
   onLogin: (credentials: { email: string; password: string }) => void;
@@ -105,7 +105,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           {/* Error Alert */}
           {error && (
             <View style={styles.errorContainer}>
-              <Icon name="error" size={20} color="#ef4444" />
+              <MaterialIcons name="error" size={20} color="#ef4444" />
               <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
@@ -116,7 +116,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Email Address</Text>
               <View style={styles.inputWrapper}>
-                <Icon name="email" size={20} color="#6b7280" style={styles.inputIcon} />
+                <MaterialIcons name="email" size={20} color="#6b7280" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your email"
@@ -138,7 +138,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputWrapper}>
-                <Icon name="lock" size={20} color="#6b7280" style={styles.inputIcon} />
+                <MaterialIcons name="lock" size={20} color="#6b7280" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your password"
@@ -154,7 +154,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   style={styles.eyeIcon}
                   onPress={() => setShowPassword(!showPassword)}
                 >
-                  <Icon 
+                  <MaterialIcons 
                     name={showPassword ? 'visibility' : 'visibility-off'} 
                     size={20} 
                     color="#6b7280" 
@@ -185,7 +185,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               ) : (
                 <>
                   <Text style={styles.loginButtonText}>Sign In</Text>
-                  <Icon name="arrow-forward" size={20} color="#ffffff" />
+                  <MaterialIcons name="arrow-forward" size={20} color="#ffffff" />
                 </>
               )}
             </TouchableOpacity>
