@@ -4,18 +4,19 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Bell, X, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
 
-interface NotificationsPanelProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-interface Notification {
+export interface Notification {
   id: string;
   type: "urgent" | "update" | "resolved";
   title: string;
   message: string;
   time: string;
   issueId?: string;
+}
+
+interface NotificationsPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+  extraNotifications?: Notification[];
 }
 
 const mockNotifications: Notification[] = [
@@ -100,8 +101,10 @@ const getNotificationBadgeColor = (type: string) => {
   }
 };
 
-export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps) {
+export function NotificationsPanel({ isOpen, onClose, extraNotifications = [] }: NotificationsPanelProps) {
   if (!isOpen) return null;
+
+  const notifications = [...extraNotifications, ...mockNotifications];
 
   return (
     <div className="fixed inset-0 bg-black/50 z-[10000] flex justify-end">
@@ -113,7 +116,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
                 <Bell className="w-5 h-5" />
                 <h3>Notifications</h3>
                 <Badge variant="secondary" className="ml-2">
-                  {mockNotifications.filter(n => n.type === "urgent").length}
+                  {notifications.filter(n => n.type === "urgent").length}
                 </Badge>
               </div>
               <Button variant="ghost" size="sm" onClick={onClose}>
@@ -124,7 +127,7 @@ export function NotificationsPanel({ isOpen, onClose }: NotificationsPanelProps)
           
           <div className="p-4">
             <div className="space-y-3">
-              {mockNotifications.map((notification) => {
+              {notifications.map((notification) => {
                 const NotificationIcon = getNotificationIcon(notification.type);
                 return (
                   <div
