@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "./ui/card";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
 
 interface CityMapViewProps {
   onMarkerClick: (markerId: string) => void;
@@ -12,6 +13,11 @@ function SetViewOnMount({ center, zoom }: { center: [number, number]; zoom: numb
   const map = useMap();
   React.useEffect(() => {
     map.setView(center, zoom);
+    map.scrollWheelZoom.enable();
+    map.dragging.enable();
+    map.doubleClickZoom.enable();
+    map.touchZoom.enable();
+    map.boxZoom.enable();
   }, [center, zoom, map]);
   return null;
 }
@@ -30,15 +36,12 @@ export function CityMapView({ onMarkerClick }: CityMapViewProps) {
       </div>
       <div className="relative w-full h-full rounded-lg overflow-hidden">
         <MapContainer 
-          className="map-background"
           style={{ 
             height: "100%", 
             width: "100%",
-            zIndex: 0,
             position: "absolute",
             top: 0,
-            left: 0,
-            pointerEvents: "none"
+            left: 0
           }}
         >
           <SetViewOnMount center={defaultCenter} zoom={12} />
@@ -49,6 +52,7 @@ export function CityMapView({ onMarkerClick }: CityMapViewProps) {
             <Marker 
               key={m.id} 
               position={m.position}
+              eventHandlers={{ click: () => onMarkerClick(m.id) }}
             >
               <Popup>{m.title}</Popup>
             </Marker>
