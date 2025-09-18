@@ -112,28 +112,13 @@ export default function App() {
       case "user-management":
         return <UserManagement />;
       case "mandal-schedule":
-        return <MandalSchedulePage />;
-      case "department-issues":
-        return (
-          <PlaceholderPage
-            title="My Issues"
-            description="Detailed view of issues assigned to you"
-          />
-        );
-      case "department-reports":
-        return (
-          <PlaceholderPage
-            title="Department Reports"
-            description="Analytics and reports for your department"
-          />
-        );
-      case "system-reports":
-        return (
-          <PlaceholderPage
-            title="System Reports"
-            description="Comprehensive system-wide analytics and reporting"
-          />
-        );
+        return <MandalSchedulePage mandalName={mandalName} />;
+      case "schedule":
+        return <SchedulePage 
+          userRole={userRole}
+          userDepartment={userDepartment}
+          mandalName={mandalName}
+        />;
       case "system-settings":
         return (
           <PlaceholderPage
@@ -141,15 +126,6 @@ export default function App() {
             description="Configure system-wide parameters and policies"
           />
         );
-      case "analytics":
-        return (
-          <PlaceholderPage
-            title="Analytics"
-            description="Comprehensive analytics and reporting for civic issues"
-          />
-        );
-      case "schedule":
-        return <SchedulePage />;
       case "settings":
         return (
           <PlaceholderPage

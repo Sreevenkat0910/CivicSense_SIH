@@ -23,80 +23,25 @@ import {
   ChevronRight
 } from "lucide-react";
 import { format, addDays, subDays, isToday, isTomorrow, isYesterday, startOfDay, endOfDay } from "date-fns";
+import { 
+  getScheduleDataForRole, 
+  canManageSchedule, 
+  getAvailableDepartments,
+  type ScheduleItem 
+} from "../data/scheduleData";
 
-interface ScheduleItem {
-  id: string;
-  title: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  date: Date;
-  priority: "low" | "medium" | "high";
-  status: "pending" | "in-progress" | "completed";
-  assignedTo: string;
-  location: string;
-  department: string;
+interface SchedulePageProps {
+  userRole: "admin" | "department" | "mandal-admin";
+  userDepartment?: string;
+  mandalName?: string;
 }
 
-const mockScheduleItems: ScheduleItem[] = [
-  {
-    id: "1",
-    title: "Road Maintenance - Main Street",
-    description: "Pothole repair and resurfacing work",
-    startTime: "08:00",
-    endTime: "16:00",
-    date: new Date(),
-    priority: "high",
-    status: "pending",
-    assignedTo: "Public Works Team",
-    location: "Main Street, Downtown",
-    department: "Public Works"
-  },
-  {
-    id: "2",
-    title: "Street Light Inspection",
-    description: "Routine inspection and maintenance of street lights",
-    startTime: "09:00",
-    endTime: "12:00",
-    date: addDays(new Date(), 1),
-    priority: "medium",
-    status: "pending",
-    assignedTo: "Electrical Team",
-    location: "Oak Avenue",
-    department: "Utilities"
-  },
-  {
-    id: "3",
-    title: "Traffic Signal Maintenance",
-    description: "Software update and hardware check",
-    startTime: "10:00",
-    endTime: "14:00",
-    date: subDays(new Date(), 1),
-    priority: "high",
-    status: "completed",
-    assignedTo: "Traffic Department",
-    location: "Broadway & 5th Street",
-    department: "Traffic Department"
-  },
-  {
-    id: "4",
-    title: "Park Cleanup",
-    description: "General cleanup and landscaping",
-    startTime: "07:00",
-    endTime: "11:00",
-    date: addDays(new Date(), 2),
-    priority: "low",
-    status: "pending",
-    assignedTo: "Parks & Recreation",
-    location: "Central Park",
-    department: "Parks & Recreation"
-  }
-];
-
-export function SchedulePage() {
+export function SchedulePage({ userRole, userDepartment, mandalName }: SchedulePageProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState("today");
-  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>(mockScheduleItems);
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>(() => 
+    getScheduleDataForRole(userRole, userDepartment, mandalName)
+  );
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ScheduleItem | null>(null);
@@ -172,9 +117,15 @@ export function SchedulePage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Schedule Management</h1>
+          <h1 className="text-3xl font-bold">
+            {userRole === "admin" && "System Schedule Management"}
+            {userRole === "department" && `${userDepartment} Schedule Management`}
+            {userRole === "mandal-admin" && `${mandalName} Mandal Schedule Management`}
+          </h1>
           <p className="text-muted-foreground">
-            Manage work schedules and assignment calendars
+            {userRole === "admin" && "Manage work schedules and assignments across all departments"}
+            {userRole === "department" && `Manage work schedules and assignments for ${userDepartment}`}
+            {userRole === "mandal-admin" && `Manage work schedules and assignments across all departments in ${mandalName} Mandal`}
           </p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -189,6 +140,8 @@ export function SchedulePage() {
               <DialogTitle>Add New Schedule Item</DialogTitle>
             </DialogHeader>
             <ScheduleForm 
+              userRole={userRole}
+              userDepartment={userDepartment}
               onSubmit={handleAddSchedule}
               onCancel={() => setIsAddDialogOpen(false)}
             />
@@ -311,23 +264,27 @@ export function SchedulePage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setEditingItem(item);
-                            setIsEditDialogOpen(true);
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteSchedule(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {canManageSchedule(userRole, item, userDepartment, mandalName) && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingItem(item);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteSchedule(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </Card>
@@ -370,6 +327,8 @@ export function SchedulePage() {
           </DialogHeader>
           {editingItem && (
             <ScheduleForm 
+              userRole={userRole}
+              userDepartment={userDepartment}
               initialData={editingItem}
               onSubmit={handleEditSchedule}
               onCancel={() => {
@@ -385,12 +344,14 @@ export function SchedulePage() {
 }
 
 interface ScheduleFormProps {
+  userRole: "admin" | "department" | "mandal-admin";
+  userDepartment?: string;
   initialData?: ScheduleItem;
   onSubmit: (data: ScheduleItem) => void;
   onCancel: () => void;
 }
 
-function ScheduleForm({ initialData, onSubmit, onCancel }: ScheduleFormProps) {
+function ScheduleForm({ userRole, userDepartment, initialData, onSubmit, onCancel }: ScheduleFormProps) {
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     description: initialData?.description || "",
@@ -401,7 +362,7 @@ function ScheduleForm({ initialData, onSubmit, onCancel }: ScheduleFormProps) {
     status: initialData?.status || "pending",
     assignedTo: initialData?.assignedTo || "",
     location: initialData?.location || "",
-    department: initialData?.department || ""
+    department: initialData?.department || (userRole === "department" ? userDepartment : "")
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -429,17 +390,19 @@ function ScheduleForm({ initialData, onSubmit, onCancel }: ScheduleFormProps) {
           <Select
             value={formData.department}
             onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}
+            disabled={userRole === "department"}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Public Works">Public Works</SelectItem>
-              <SelectItem value="Utilities">Utilities</SelectItem>
-              <SelectItem value="Traffic Department">Traffic Department</SelectItem>
-              <SelectItem value="Parks & Recreation">Parks & Recreation</SelectItem>
-              <SelectItem value="Water Department">Water Department</SelectItem>
-              <SelectItem value="Code Enforcement">Code Enforcement</SelectItem>
+              {userRole === "department" ? (
+                <SelectItem value={userDepartment || ""}>{userDepartment}</SelectItem>
+              ) : (
+                getAvailableDepartments(userRole).map(dept => (
+                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
