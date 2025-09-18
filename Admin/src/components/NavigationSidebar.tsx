@@ -22,8 +22,8 @@ interface NavigationSidebarProps {
 const adminNavItems = [
   { icon: Home, label: "Dashboard", page: "dashboard" },
   { icon: FileText, label: "Issues", page: "issues" },
+  { icon: BarChart3, label: "Analytics", page: "analytics" },
   { icon: Calendar, label: "Schedule", page: "schedule" },
-  { icon: Building2, label: "Department View", page: "department" },
   { icon: Settings, label: "Settings", page: "settings" },
 ];
 
@@ -34,7 +34,9 @@ const departmentNavItems = [
 ];
 
 const mandalAdminNavItems = [
-  { icon: Home, label: "Mandal Dashboard", page: "mandal-dashboard" },
+  { icon: Home, label: "Mandal Admin", page: "mandal-dashboard" },
+  { icon: FileText, label: "Issues", page: "issues" },
+  { icon: BarChart3, label: "Analytics", page: "analytics" },
   { icon: Building2, label: "Department Management", page: "department-management" },
   { icon: Users, label: "User Management", page: "user-management" },
   { icon: Calendar, label: "Schedule", page: "mandal-schedule" },

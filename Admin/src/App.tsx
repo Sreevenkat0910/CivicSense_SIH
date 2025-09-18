@@ -24,7 +24,7 @@ export default function App() {
   const [userDepartment, setUserDepartment] = useState("Public Works");
   const [userName, setUserName] = useState("John Doe");
   const [mandalName, setMandalName] = useState("Karimnagar");
-  const [currentPage, setCurrentPage] = useState("dashboard");
+  const [currentPage, setCurrentPage] = useState("mandal-dashboard");
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isIssueDetailsOpen, setIsIssueDetailsOpen] = useState(false);
@@ -81,11 +81,10 @@ export default function App() {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case "dashboard":
+        // Redirect legacy Admin Dashboard to Mandal Admin dashboard
         return (
-          <DashboardPage
-            onIssueClick={handleIssueClick}
-            onToggleFilters={() => setIsFilterOpen(true)}
-            onMarkerClick={handleMarkerClick}
+          <MandalAdminDashboard
+            onNavigate={setCurrentPage}
           />
         );
       case "issues":
@@ -139,29 +138,12 @@ export default function App() {
   };
 
   const getDefaultPageForRole = () => {
-    switch (userRole) {
-      case "mandal-admin":
-        return (
-          <MandalAdminDashboard
-            onNavigate={setCurrentPage}
-          />
-        );
-      case "department":
-        return (
-          <DepartmentDashboard
-            onIssueClick={handleIssueClick}
-            userDepartment={userDepartment}
-          />
-        );
-      default:
-        return (
-          <DashboardPage
-            onIssueClick={handleIssueClick}
-            onToggleFilters={() => setIsFilterOpen(true)}
-            onMarkerClick={handleMarkerClick}
-          />
-        );
-    }
+    // Always default to Mandal Admin dashboard as the primary experience
+    return (
+      <MandalAdminDashboard
+        onNavigate={setCurrentPage}
+      />
+    );
   };
 
   const renderHeaderBar = () => {

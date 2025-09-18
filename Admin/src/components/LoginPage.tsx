@@ -15,16 +15,21 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
   // Simple demo user directory (replace with real API later)
   const demoUsers = [
-    { username: "admin", password: "admin", role: "admin" as const, name: "John Doe" },
     { username: "public", password: "public", role: "department" as const, department: "Public Works", name: "Priya Singh" },
     { username: "water", password: "water", role: "department" as const, department: "Water Department", name: "Mike Chen" },
     { username: "mandal", password: "mandal", role: "mandal-admin" as const, mandal: "Karimnagar", name: "Rajesh Kumar" },
+    { username: "hod", password: "hod", role: "department" as const, department: "Public Works", name: "Head of Department" },
   ];
 
   const handleLogin = () => {
+    // Block any attempt to use the reserved admin username
+    if (username.trim().toLowerCase() === "admin") {
+      alert("Admin login is disabled.");
+      return;
+    }
     const user = demoUsers.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
     if (!user) {
-      alert("Invalid credentials. Try admin/admin, public/public, water/water, or mandal/mandal");
+      alert("Invalid credentials. Try public/public, water/water, or mandal/mandal");
       return;
     }
 
@@ -88,12 +93,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <p className="text-sm text-muted-foreground mb-3">Demo Accounts</p>
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <Badge variant="secondary" className="bg-blue-50 text-blue-700">Admin</Badge>
-                <span className="text-muted-foreground">admin / admin</span>
-              </div>
-              <div className="flex items-center justify-between text-xs">
                 <Badge variant="secondary" className="bg-green-50 text-green-700">Department</Badge>
                 <span className="text-muted-foreground">public / public, water / water</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700">Head of Department</Badge>
+                <span className="text-muted-foreground">hod / hod</span>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <Badge variant="secondary" className="bg-purple-50 text-purple-700">Mandal Admin</Badge>
