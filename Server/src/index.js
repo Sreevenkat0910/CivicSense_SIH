@@ -22,6 +22,23 @@ app.use('/uploads', express.static('uploads'));
 
 const PORT = process.env.PORT || 4000;
 
+// Root route
+app.get('/', (_req, res) => {
+  res.json({
+    message: 'CivicSense API Server',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/api/health',
+      reports: '/api/reports',
+      users: '/api/users',
+      usertypes: '/api/usertypes',
+      uploads: '/uploads'
+    },
+    documentation: 'This is the backend API server for CivicSense civic issue reporting platform'
+  });
+});
+
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api/reports', reportsRouter);
 app.use('/api/users', usersRouter);

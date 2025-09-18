@@ -10,7 +10,7 @@ import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { 
-  Calendar as CalendarIcon, 
+  CalendarIcon, 
   Clock, 
   Plus, 
   Edit, 
