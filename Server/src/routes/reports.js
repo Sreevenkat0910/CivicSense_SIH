@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { supabase } from '../lib/supabase.js';
 import { generateReportId } from '../utils/id.js';
+import { mockReports, mockUsers } from '../data/mockData.js';
 
 const router = express.Router();
 
@@ -156,28 +157,24 @@ router.post('/', async (req, res) => {
 // Get all reports
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('reports')
-      .select(`
-        *,
-        reporter:reporter_user_id(
-          user_id,
-          full_name,
-          email,
-          mobile
-        )
-      `)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Database error:', error);
-      return res.status(500).json({ error: error.message });
-    }
+    // Return mock reports with reporter information
+    const reportsWithReporter = mockReports.map(report => {
+      const reporter = mockUsers.find(user => user.email === report.reporter_email);
+      return {
+        ...report,
+        reporter: reporter ? {
+          user_id: reporter.user_id,
+          full_name: reporter.full_name,
+          email: reporter.email,
+          mobile: reporter.mobile
+        } : null
+      };
+    });
 
     return res.status(200).json({ 
       success: true,
-      reports: data,
-      count: data.length
+      reports: reportsWithReporter,
+      count: reportsWithReporter.length
     });
   } catch (err) {
     console.error('Get reports error:', err);
@@ -190,32 +187,27 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const { data, error } = await supabase
-      .from('reports')
-      .select(`
-        *,
-        reporter:reporter_user_id(
-          user_id,
-          full_name,
-          email,
-          mobile
-        )
-      `)
-      .eq('report_id', id)
-      .single();
-
-    if (error) {
-      console.error('Database error:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
-    if (!data) {
+    // Find report in mock data
+    const report = mockReports.find(r => r.report_id === id || r.id === id);
+    if (!report) {
       return res.status(404).json({ error: 'Report not found' });
     }
 
+    // Find reporter information
+    const reporter = mockUsers.find(user => user.email === report.reporter_email);
+    const reportWithReporter = {
+      ...report,
+      reporter: reporter ? {
+        user_id: reporter.user_id,
+        full_name: reporter.full_name,
+        email: reporter.email,
+        mobile: reporter.mobile
+      } : null
+    };
+
     return res.status(200).json({ 
       success: true,
-      report: data
+      report: reportWithReporter
     });
   } catch (err) {
     console.error('Get report error:', err);

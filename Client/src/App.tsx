@@ -244,7 +244,7 @@ export default function App() {
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Mock successful login - in real app, this would validate against backend
-      if (credentials.email === 'demo@example.com' && credentials.password === 'password') {
+      if (credentials.email === 'citizen@civicsense.com' && credentials.password === 'citizen123') {
         const userData: User = {
           id: '1',
           name: 'Demo User',
@@ -258,7 +258,7 @@ export default function App() {
         localStorage.setItem('civic-user', JSON.stringify(userData));
         toast.success('Welcome back!');
       } else {
-        setAuthError('Invalid email or password. Try demo@example.com / password');
+        setAuthError('Invalid email or password. Try citizen@civicsense.com / citizen123');
       }
     } catch (error) {
       setAuthError('Login failed. Please try again.');

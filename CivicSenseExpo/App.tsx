@@ -347,7 +347,7 @@ const App = () => {
 
   const handleLogin = async (credentials: { email: string; password: string }) => {
     try {
-      const response = await fetch('http://192.168.1.8:4000/api/users/login', {
+      const response = await fetch('http://localhost:4000/api/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -382,7 +382,7 @@ const App = () => {
 
   const handleRegister = async (userData: any) => {
     try {
-      const response = await fetch('http://192.168.1.8:4000/api/users/register', {
+      const response = await fetch('http://localhost:4000/api/users/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

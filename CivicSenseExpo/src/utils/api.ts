@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-const API_BASE_URL = 'http://192.168.1.8:4000';
+const API_BASE_URL = 'http://localhost:4000';
 
 export interface PhotoObject {
   url: string;

@@ -1,26 +1,17 @@
 import express from 'express';
 import { supabase } from '../lib/supabase.js';
+import { mockUserTypes } from '../data/mockData.js';
 
 const router = express.Router();
 
 // Get all user types
 router.get('/', async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('usertype')
-      .select('*')
-      .eq('is_active', true)
-      .order('type_name', { ascending: true });
-
-    if (error) {
-      console.error('Database error:', error);
-      return res.status(500).json({ error: error.message });
-    }
-
+    // Return mock user types
     return res.status(200).json({ 
       success: true,
-      userTypes: data,
-      count: data.length
+      userTypes: mockUserTypes,
+      count: mockUserTypes.length
     });
   } catch (err) {
     console.error('Get user types error:', err);
