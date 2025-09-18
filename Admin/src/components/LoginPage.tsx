@@ -30,7 +30,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     }
     const user = demoUsers.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
     if (!user) {
-      alert("Invalid credentials. Try admin/admin, public/public, water/water, or mandal/mandal");
+      alert("Invalid credentials. Try admin/admin, public/public, water/water, hod/hod, or mandal/mandal");
       return;
     }
 

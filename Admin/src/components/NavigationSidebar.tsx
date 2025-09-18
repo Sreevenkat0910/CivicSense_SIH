@@ -7,7 +7,8 @@ import {
   Settings,
   Building2,
   Users,
-  Shield
+  Shield,
+  Clock
 } from "lucide-react";
 
 interface NavigationSidebarProps {
@@ -24,19 +25,24 @@ const adminNavItems = [
   { icon: FileText, label: "Issues", page: "issues" },
   { icon: BarChart3, label: "Analytics", page: "analytics" },
   { icon: Calendar, label: "Schedule", page: "schedule" },
+  { icon: Clock, label: "My Timetable", page: "my-timetable" },
   { icon: Settings, label: "Settings", page: "settings" },
 ];
 
 const departmentNavItems = [
-  { icon: Building2, label: "Department Dashboard", page: "department" },
+  { icon: Building2, label: "Head of Department", page: "hod-dashboard" },
+  { icon: FileText, label: "Department Issues", page: "department-issues" },
+  { icon: Users, label: "Manage Employees", page: "department-employees" },
   { icon: Calendar, label: "Schedule", page: "schedule" },
-  { icon: Settings, label: "Settings", page: "settings" },
+  { icon: Clock, label: "My Timetable", page: "my-timetable" },
+  { icon: Settings, label: "Department Settings", page: "department-settings" },
 ];
 
 const departmentEmployeeNavItems = [
   { icon: Building2, label: "My Dashboard", page: "department-employee" },
   { icon: Calendar, label: "Schedule", page: "schedule" },
   { icon: FileText, label: "My Tasks", page: "employee-tasks" },
+  { icon: Clock, label: "My Timetable", page: "my-timetable" },
   { icon: Settings, label: "Settings", page: "settings" },
 ];
 
@@ -47,6 +53,7 @@ const mandalAdminNavItems = [
   { icon: Building2, label: "Department Management", page: "department-management" },
   { icon: Users, label: "User Management", page: "user-management" },
   { icon: Calendar, label: "Schedule", page: "mandal-schedule" },
+  { icon: Clock, label: "My Timetable", page: "my-timetable" },
   { icon: Settings, label: "System Settings", page: "system-settings" },
 ];
 
@@ -76,7 +83,7 @@ export function NavigationSidebar({
       case "mandal-admin":
         return `${mandalName} Mandal`;
       case "department":
-        return `${userDepartment} Portal`;
+        return `${userDepartment} - Head of Department`;
       case "department-employee":
         return `${userDepartment} Portal`;
       default:
@@ -89,7 +96,7 @@ export function NavigationSidebar({
       case "mandal-admin":
         return "Government Administration";
       case "department":
-        return "Department Dashboard";
+        return "Department Management";
       case "department-employee":
         return "My Assigned Issues";
       default:
