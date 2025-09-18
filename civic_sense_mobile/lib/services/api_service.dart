@@ -1,0 +1,204 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/issue.dart';
+
+class ApiService {
+  static const String baseUrl = 'http://192.168.1.8:4000'; // Your backend URL
+  
+  // Headers
+  static Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+
+  // Authentication endpoints
+  static Future<Map<String, dynamic>?> login(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/login'),
+        headers: _headers,
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (e) {
+      print('Login error: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> register(String email, String password, String name) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/register'),
+        headers: _headers,
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+          'name': name,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (e) {
+      print('Register error: $e');
+      return null;
+    }
+  }
+
+  // Issue endpoints
+  static Future<List<Issue>> getIssues() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/reports'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        if (responseData['success'] == true && responseData['reports'] != null) {
+          final List<dynamic> data = responseData['reports'];
+          return data.map((json) => Issue.fromJson(json)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Get issues error: $e');
+      return [];
+    }
+  }
+
+  static Future<List<Issue>> getMyReports(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/reports/user/$userId'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        if (responseData['success'] == true && responseData['reports'] != null) {
+          final List<dynamic> data = responseData['reports'];
+          return data.map((json) => Issue.fromJson(json)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Get my reports error: $e');
+      return [];
+    }
+  }
+
+  static Future<Issue?> submitIssue({
+    required String title,
+    required String description,
+    required String category,
+    required String userId,
+    String? imageUrl,
+    double? latitude,
+    double? longitude,
+    String? address,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/reports'),
+        headers: _headers,
+        body: jsonEncode({
+          'title': title,
+          'description': description,
+          'category': category,
+          'reporter_name': userId, // Using reporter_name as per server structure
+          'latitude': latitude,
+          'longitude': longitude,
+          'location': address,
+          'images': imageUrl != null ? [imageUrl] : [],
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        if (responseData['success'] == true && responseData['report'] != null) {
+          return Issue.fromJson(responseData['report']);
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Submit issue error: $e');
+      return null;
+    }
+  }
+
+  static Future<bool> upvoteIssue(String issueId, String userId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/issues/$issueId/upvote'),
+        headers: _headers,
+        body: jsonEncode({
+          'userId': userId,
+        }),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Upvote issue error: $e');
+      return false;
+    }
+  }
+
+  static Future<List<Issue>> getNearbyIssues(double latitude, double longitude, double radiusKm) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/reports/nearby?lat=$latitude&lng=$longitude&radius=$radiusKm'),
+        headers: _headers,
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        if (responseData['success'] == true && responseData['reports'] != null) {
+          final List<dynamic> data = responseData['reports'];
+          return data.map((json) => Issue.fromJson(json)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Get nearby issues error: $e');
+      return [];
+    }
+  }
+
+  // File upload
+  static Future<String?> uploadImage(String imagePath) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/api/reports/upload-photos'),
+      );
+
+      request.files.add(await http.MultipartFile.fromPath('photos', imagePath));
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        final responseBody = await response.stream.bytesToString();
+        final data = jsonDecode(responseBody);
+        if (data['success'] == true && data['photos'] != null && data['photos'].isNotEmpty) {
+          return data['photos'][0]['url'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Upload image error: $e');
+      return null;
+    }
+  }
+}
+
