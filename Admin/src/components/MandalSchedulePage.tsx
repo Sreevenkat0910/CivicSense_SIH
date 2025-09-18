@@ -45,7 +45,6 @@ interface MandalScheduleItem {
   location: string;
   department: string;
   mandalArea: string;
-  supervisor: string;
 }
 
 const mockMandalScheduleItems: MandalScheduleItem[] = [
@@ -58,11 +57,10 @@ const mockMandalScheduleItems: MandalScheduleItem[] = [
     date: new Date(),
     priority: "high",
     status: "in-progress",
-    assignedTo: "All Public Works Teams",
+    assignedTo: "Rajesh Kumar",
     location: "Karimnagar Mandal",
     department: "Public Works",
-    mandalArea: "Central Zone",
-    supervisor: "Rajesh Kumar"
+    mandalArea: "Central Zone"
   },
   {
     id: "2",
@@ -73,11 +71,10 @@ const mockMandalScheduleItems: MandalScheduleItem[] = [
     date: addDays(new Date(), 1),
     priority: "high",
     status: "pending",
-    assignedTo: "Water Department Team",
+    assignedTo: "Priya Sharma",
     location: "All Mandal Areas",
     department: "Water Department",
-    mandalArea: "All Zones",
-    supervisor: "Priya Sharma"
+    mandalArea: "All Zones"
   },
   {
     id: "3",
@@ -88,11 +85,10 @@ const mockMandalScheduleItems: MandalScheduleItem[] = [
     date: subDays(new Date(), 1),
     priority: "medium",
     status: "completed",
-    assignedTo: "All Department Heads",
+    assignedTo: "Rajesh Kumar",
     location: "Mandal Office",
     department: "Administration",
-    mandalArea: "Central Zone",
-    supervisor: "Rajesh Kumar"
+    mandalArea: "Central Zone"
   },
   {
     id: "4",
@@ -103,11 +99,10 @@ const mockMandalScheduleItems: MandalScheduleItem[] = [
     date: addDays(new Date(), 2),
     priority: "medium",
     status: "pending",
-    assignedTo: "Public Works Staff",
+    assignedTo: "Amit Patel",
     location: "Training Center",
     department: "Public Works",
-    mandalArea: "Central Zone",
-    supervisor: "Amit Patel"
+    mandalArea: "Central Zone"
   },
   {
     id: "5",
@@ -118,13 +113,52 @@ const mockMandalScheduleItems: MandalScheduleItem[] = [
     date: addDays(new Date(), 3),
     priority: "high",
     status: "pending",
-    assignedTo: "Health Department",
+    assignedTo: "Dr. Sunita Reddy",
     location: "Community Center",
     department: "Health Department",
-    mandalArea: "North Zone",
-    supervisor: "Dr. Sunita Reddy"
+    mandalArea: "North Zone"
   }
 ];
+
+// Mock employee data for each department
+const departmentEmployees = {
+  "Public Works": [
+    "Rajesh Kumar", "Suresh Reddy", "Anil Kumar", "Manoj Singh", "Ravi Sharma",
+    "Deepak Patel", "Kiran Kumar", "Vijay Singh", "Rohit Kumar", "Naveen Reddy"
+  ],
+  "Utilities": [
+    "Vikram Singh", "Priya Sharma", "Rajesh Gupta", "Sunita Reddy", "Amit Kumar",
+    "Neha Singh", "Rohit Sharma", "Kavita Patel", "Suresh Kumar", "Anita Reddy"
+  ],
+  "Traffic Department": [
+    "Amit Patel", "Ravi Kumar", "Sunil Singh", "Kiran Reddy", "Manoj Kumar",
+    "Deepak Sharma", "Vijay Patel", "Rohit Singh", "Naveen Kumar", "Anil Reddy"
+  ],
+  "Parks & Recreation": [
+    "Sunita Reddy", "Rajesh Kumar", "Priya Singh", "Amit Sharma", "Kiran Patel",
+    "Deepak Kumar", "Vijay Reddy", "Rohit Singh", "Naveen Kumar", "Manoj Reddy"
+  ],
+  "Water Department": [
+    "Priya Sharma", "Rajesh Kumar", "Amit Singh", "Sunita Reddy", "Vikram Patel",
+    "Deepak Kumar", "Kiran Sharma", "Vijay Singh", "Rohit Reddy", "Naveen Kumar"
+  ],
+  "Code Enforcement": [
+    "Rajesh Kumar", "Priya Singh", "Amit Sharma", "Sunita Reddy", "Vikram Patel",
+    "Deepak Kumar", "Kiran Singh", "Vijay Reddy", "Rohit Kumar", "Naveen Sharma"
+  ],
+  "Health Department": [
+    "Dr. Sunita Reddy", "Dr. Rajesh Kumar", "Dr. Priya Singh", "Dr. Amit Sharma",
+    "Dr. Vikram Patel", "Dr. Deepak Kumar", "Dr. Kiran Singh", "Dr. Vijay Reddy"
+  ],
+  "Education Department": [
+    "Rajesh Kumar", "Priya Singh", "Sunita Reddy", "Amit Sharma", "Vikram Patel",
+    "Deepak Kumar", "Kiran Singh", "Vijay Reddy", "Rohit Kumar", "Naveen Sharma"
+  ],
+  "Administration": [
+    "Rajesh Kumar", "Priya Singh", "Sunita Reddy", "Amit Sharma", "Vikram Patel",
+    "Deepak Kumar", "Kiran Singh", "Vijay Reddy", "Rohit Kumar", "Naveen Sharma"
+  ]
+};
 
 interface MandalSchedulePageProps {
   mandalName: string;
@@ -451,9 +485,14 @@ function MandalScheduleForm({ initialData, onSubmit, onCancel }: MandalScheduleF
     assignedTo: initialData?.assignedTo || "",
     location: initialData?.location || "",
     department: initialData?.department || "",
-    mandalArea: initialData?.mandalArea || "",
-    supervisor: initialData?.supervisor || ""
+    mandalArea: initialData?.mandalArea || ""
   });
+
+  // Get available employees based on selected department
+  const getAvailableEmployees = () => {
+    if (!formData.department) return [];
+    return departmentEmployees[formData.department as keyof typeof departmentEmployees] || [];
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -479,7 +518,7 @@ function MandalScheduleForm({ initialData, onSubmit, onCancel }: MandalScheduleF
           <label className="text-sm font-medium">Department</label>
           <Select
             value={formData.department}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, department: value, assignedTo: "" }))}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select department" />
@@ -588,12 +627,22 @@ function MandalScheduleForm({ initialData, onSubmit, onCancel }: MandalScheduleF
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium">Assigned To</label>
-          <Input
+          <Select
             value={formData.assignedTo}
-            onChange={(e) => setFormData(prev => ({ ...prev, assignedTo: e.target.value }))}
-            placeholder="Team or person assigned"
-            required
-          />
+            onValueChange={(value) => setFormData(prev => ({ ...prev, assignedTo: value }))}
+            disabled={!formData.department}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={formData.department ? "Select employee" : "Select department first"} />
+            </SelectTrigger>
+            <SelectContent>
+              {getAvailableEmployees().map((employee) => (
+                <SelectItem key={employee} value={employee}>
+                  {employee}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <label className="text-sm font-medium">Location</label>
@@ -606,35 +655,24 @@ function MandalScheduleForm({ initialData, onSubmit, onCancel }: MandalScheduleF
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium">Mandal Area</label>
-          <Select
-            value={formData.mandalArea}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, mandalArea: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select mandal area" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Central Zone">Central Zone</SelectItem>
-              <SelectItem value="North Zone">North Zone</SelectItem>
-              <SelectItem value="South Zone">South Zone</SelectItem>
-              <SelectItem value="East Zone">East Zone</SelectItem>
-              <SelectItem value="West Zone">West Zone</SelectItem>
-              <SelectItem value="All Zones">All Zones</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-sm font-medium">Supervisor</label>
-          <Input
-            value={formData.supervisor}
-            onChange={(e) => setFormData(prev => ({ ...prev, supervisor: e.target.value }))}
-            placeholder="Supervisor name"
-            required
-          />
-        </div>
+      <div>
+        <label className="text-sm font-medium">Mandal Area</label>
+        <Select
+          value={formData.mandalArea}
+          onValueChange={(value) => setFormData(prev => ({ ...prev, mandalArea: value }))}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select mandal area" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Central Zone">Central Zone</SelectItem>
+            <SelectItem value="North Zone">North Zone</SelectItem>
+            <SelectItem value="South Zone">South Zone</SelectItem>
+            <SelectItem value="East Zone">East Zone</SelectItem>
+            <SelectItem value="West Zone">West Zone</SelectItem>
+            <SelectItem value="All Zones">All Zones</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex justify-end gap-2">

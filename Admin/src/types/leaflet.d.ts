@@ -1,3 +1,3 @@
 declare module 'leaflet' {
-  export * from 'leaflet';
+  export * from '@types/leaflet';
 }

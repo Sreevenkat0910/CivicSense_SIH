@@ -20,6 +20,19 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "./ui/popover";
+import { Calendar as CalendarComponent } from "./ui/calendar";
+import { 
   Calendar,
   Clock,
   Plus,
@@ -33,8 +46,13 @@ import {
   FileText,
   MoreHorizontal,
   Filter,
-  Search
+  Search,
+  Calendar as CalendarIcon,
+  Coffee,
+  Briefcase,
+  Home
 } from "lucide-react";
+import { format } from "date-fns";
 
 // Mock data for timetable entries
 const mockTimetableEntries = [
@@ -85,6 +103,42 @@ const mockTimetableEntries = [
     description: "Monthly equipment check",
     status: "confirmed",
     priority: "low"
+  },
+  {
+    id: "tt-005",
+    title: "Personal Task - Report Review",
+    type: "task",
+    date: "2024-01-23",
+    startTime: "10:00",
+    endTime: "11:30",
+    location: "Office",
+    description: "Review monthly reports and prepare summary",
+    status: "confirmed",
+    priority: "medium"
+  },
+  {
+    id: "tt-006",
+    title: "Lunch Break",
+    type: "free-time",
+    date: "2024-01-23",
+    startTime: "12:00",
+    endTime: "13:00",
+    location: "Cafeteria",
+    description: "Lunch break with colleagues",
+    status: "confirmed",
+    priority: "low"
+  },
+  {
+    id: "tt-007",
+    title: "Personal Appointment",
+    type: "personal",
+    date: "2024-01-24",
+    startTime: "15:00",
+    endTime: "16:00",
+    location: "Medical Center",
+    description: "Doctor appointment",
+    status: "confirmed",
+    priority: "high"
   }
 ];
 
@@ -183,6 +237,12 @@ const getTypeIcon = (type: string) => {
       return <MapPin className="w-4 h-4" />;
     case "maintenance":
       return <FileText className="w-4 h-4" />;
+    case "task":
+      return <Briefcase className="w-4 h-4" />;
+    case "free-time":
+      return <Coffee className="w-4 h-4" />;
+    case "personal":
+      return <Home className="w-4 h-4" />;
     default:
       return <Calendar className="w-4 h-4" />;
   }
@@ -195,6 +255,7 @@ export function MyTimetable({ userRole, userName, userDepartment }: MyTimetableP
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   // Filter entries based on search and status
   const filteredEntries = timetableEntries.filter(entry => {
@@ -248,16 +309,39 @@ export function MyTimetable({ userRole, userName, userDepartment }: MyTimetableP
     );
   };
 
+  const handleAddEntry = (entryData: any) => {
+    const newEntry = {
+      id: `tt-${Date.now()}`,
+      ...entryData,
+      status: "confirmed"
+    };
+    setTimetableEntries(prev => [...prev, newEntry]);
+    setIsAddDialogOpen(false);
+  };
+
   const renderSchedule = () => (
     <div className="space-y-6">
       {/* Schedule Controls */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3>My Schedule</h3>
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Entry
-          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Entry
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Add New Schedule Entry</DialogTitle>
+              </DialogHeader>
+              <TimetableEntryForm 
+                onSubmit={handleAddEntry}
+                onCancel={() => setIsAddDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
         
         <div className="flex items-center gap-4 mb-4">
@@ -595,5 +679,155 @@ export function MyTimetable({ userRole, userName, userDepartment }: MyTimetableP
       {activeTab === "availability" && renderAvailability()}
       {userRole === "department-employee" && activeTab === "jobs" && renderJobAssignments()}
     </div>
+  );
+}
+
+// TimetableEntryForm Component
+interface TimetableEntryFormProps {
+  onSubmit: (data: any) => void;
+  onCancel: () => void;
+}
+
+function TimetableEntryForm({ onSubmit, onCancel }: TimetableEntryFormProps) {
+  const [formData, setFormData] = useState({
+    title: "",
+    type: "task",
+    date: new Date(),
+    startTime: "",
+    endTime: "",
+    location: "",
+    description: "",
+    priority: "medium"
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      ...formData,
+      date: format(formData.date, "yyyy-MM-dd")
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium">Title</label>
+          <Input
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            placeholder="Entry title"
+            required
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Type</label>
+          <Select
+            value={formData.type}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="task">My Task</SelectItem>
+              <SelectItem value="meeting">Meeting</SelectItem>
+              <SelectItem value="free-time">Free Time</SelectItem>
+              <SelectItem value="personal">Personal</SelectItem>
+              <SelectItem value="field-work">Field Work</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">Description</label>
+        <Textarea
+          value={formData.description}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="Entry description"
+          rows={3}
+        />
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label className="text-sm font-medium">Date</label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full justify-start">
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                {format(formData.date, "MMM d, yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <CalendarComponent
+                mode="single"
+                selected={formData.date}
+                onSelect={(date) => {
+                  if (date) setFormData(prev => ({ ...prev, date }));
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Start Time</label>
+          <Input
+            type="time"
+            value={formData.startTime}
+            onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+            required
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">End Time</label>
+          <Input
+            type="time"
+            value={formData.endTime}
+            onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="text-sm font-medium">Location</label>
+          <Input
+            value={formData.location}
+            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+            placeholder="Location"
+            required
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Priority</label>
+          <Select
+            value={formData.priority}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          Add Entry
+        </Button>
+      </div>
+    </form>
   );
 }

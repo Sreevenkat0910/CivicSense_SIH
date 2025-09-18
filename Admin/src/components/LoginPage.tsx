@@ -30,13 +30,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     }
     const user = demoUsers.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
     if (!user) {
+
+
       alert("Invalid credentials. Try admin/admin, public/public, water/water, hod/hod, or mandal/mandal");
       return;
     }
 
-    if (user.role === "admin") {
-      onLogin("admin", undefined, user.name);
-    } else if (user.role === "department") {
+    if (user.role === "department") {
       onLogin("department", user.department, user.name);
     } else if (user.role === "department-employee") {
       onLogin("department-employee", user.department, user.name);
