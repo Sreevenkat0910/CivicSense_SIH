@@ -6,7 +6,7 @@ import { Badge } from "./ui/badge";
 import { Building2 } from "lucide-react";
 
 interface LoginPageProps {
-  onLogin: (userRole: "admin" | "department" | "mandal-admin", department?: string, userName?: string, mandalName?: string) => void;
+  onLogin: (userRole: "admin" | "department" | "department-employee" | "mandal-admin", department?: string, userName?: string, mandalName?: string) => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
@@ -15,13 +15,19 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
   // Simple demo user directory (replace with real API later)
   const demoUsers = [
-    { username: "admin", password: "admin", role: "admin" as const, name: "John Doe" },
     { username: "public", password: "public", role: "department" as const, department: "Public Works", name: "Priya Singh" },
     { username: "water", password: "water", role: "department" as const, department: "Water Department", name: "Mike Chen" },
+    { username: "ravie", password: "ravie", role: "department-employee" as const, department: "Public Works", name: "Ravi Kumar" },
     { username: "mandal", password: "mandal", role: "mandal-admin" as const, mandal: "Karimnagar", name: "Rajesh Kumar" },
+    { username: "hod", password: "hod", role: "department" as const, department: "Public Works", name: "Head of Department" },
   ];
 
   const handleLogin = () => {
+    // Block any attempt to use the reserved admin username
+    if (username.trim().toLowerCase() === "admin") {
+      alert("Admin login is disabled.");
+      return;
+    }
     const user = demoUsers.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
     if (!user) {
       alert("Invalid credentials. Try admin/admin, public/public, water/water, or mandal/mandal");
@@ -32,6 +38,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       onLogin("admin", undefined, user.name);
     } else if (user.role === "department") {
       onLogin("department", user.department, user.name);
+    } else if (user.role === "department-employee") {
+      onLogin("department-employee", user.department, user.name);
     } else {
       onLogin("mandal-admin", undefined, user.name, user.mandal);
     }
@@ -87,10 +95,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           <div className="text-center pt-4 border-t">
             <p className="text-sm text-muted-foreground mb-3">Demo Accounts</p>
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <Badge variant="secondary" className="bg-blue-50 text-blue-700">Admin</Badge>
-                <span className="text-muted-foreground">admin / admin</span>
-              </div>
               <div className="flex items-center justify-between text-xs">
                 <Badge variant="secondary" className="bg-green-50 text-green-700">Department</Badge>
                 <span className="text-muted-foreground">public / public, water / water</span>

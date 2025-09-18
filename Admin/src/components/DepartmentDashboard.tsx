@@ -174,13 +174,13 @@ export function DepartmentDashboard({ onIssueClick, userDepartment }: Department
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h1>{userDepartment} Dashboard</h1>
+            <h1>Head of Department - {userDepartment}</h1>
             <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-              Department Portal
+              Head of Department
             </Badge>
           </div>
           <p className="text-muted-foreground">
-            Manage issues assigned to {userDepartment}
+            Manage issues and performance for {userDepartment}
           </p>
         </div>
       </div>

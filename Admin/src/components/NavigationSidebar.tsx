@@ -14,7 +14,7 @@ interface NavigationSidebarProps {
   className?: string;
   currentPage: string;
   onPageChange: (page: string) => void;
-  userRole?: "admin" | "department" | "mandal-admin";
+  userRole?: "admin" | "department" | "department-employee" | "mandal-admin";
   userDepartment?: string;
   mandalName?: string;
 }
@@ -22,8 +22,8 @@ interface NavigationSidebarProps {
 const adminNavItems = [
   { icon: Home, label: "Dashboard", page: "dashboard" },
   { icon: FileText, label: "Issues", page: "issues" },
+  { icon: BarChart3, label: "Analytics", page: "analytics" },
   { icon: Calendar, label: "Schedule", page: "schedule" },
-  { icon: Building2, label: "Department View", page: "department" },
   { icon: Settings, label: "Settings", page: "settings" },
 ];
 
@@ -33,8 +33,17 @@ const departmentNavItems = [
   { icon: Settings, label: "Settings", page: "settings" },
 ];
 
+const departmentEmployeeNavItems = [
+  { icon: Building2, label: "My Dashboard", page: "department-employee" },
+  { icon: Calendar, label: "Schedule", page: "schedule" },
+  { icon: FileText, label: "My Tasks", page: "employee-tasks" },
+  { icon: Settings, label: "Settings", page: "settings" },
+];
+
 const mandalAdminNavItems = [
-  { icon: Home, label: "Mandal Dashboard", page: "mandal-dashboard" },
+  { icon: Home, label: "Mandal Admin", page: "mandal-dashboard" },
+  { icon: FileText, label: "Issues", page: "issues" },
+  { icon: BarChart3, label: "Analytics", page: "analytics" },
   { icon: Building2, label: "Department Management", page: "department-management" },
   { icon: Users, label: "User Management", page: "user-management" },
   { icon: Calendar, label: "Schedule", page: "mandal-schedule" },
@@ -55,6 +64,8 @@ export function NavigationSidebar({
         return mandalAdminNavItems;
       case "department":
         return departmentNavItems;
+      case "department-employee":
+        return departmentEmployeeNavItems;
       default:
         return adminNavItems;
     }
@@ -65,6 +76,8 @@ export function NavigationSidebar({
       case "mandal-admin":
         return `${mandalName} Mandal`;
       case "department":
+        return `${userDepartment} Portal`;
+      case "department-employee":
         return `${userDepartment} Portal`;
       default:
         return "CivicReport Admin";
@@ -77,6 +90,8 @@ export function NavigationSidebar({
         return "Government Administration";
       case "department":
         return "Department Dashboard";
+      case "department-employee":
+        return "My Assigned Issues";
       default:
         return "Municipal Dashboard";
     }
@@ -88,6 +103,8 @@ export function NavigationSidebar({
         return "MA";
       case "department":
         return "MC";
+      case "department-employee":
+        return "RK";
       default:
         return "JD";
     }
@@ -99,6 +116,8 @@ export function NavigationSidebar({
         return "Mandal Admin";
       case "department":
         return "Mike Chen";
+      case "department-employee":
+        return "Ravi Kumar";
       default:
         return "John Doe";
     }
@@ -109,6 +128,8 @@ export function NavigationSidebar({
       case "mandal-admin":
         return "Mandal Administrator";
       case "department":
+        return `${userDepartment} Employee`;
+      case "department-employee":
         return `${userDepartment} Employee`;
       default:
         return "City Administrator";

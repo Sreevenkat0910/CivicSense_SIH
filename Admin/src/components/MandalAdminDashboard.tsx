@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { CityMapView } from "./CityMapView";
 import { 
   Building2,
   Users,
@@ -48,6 +49,11 @@ interface MandalAdminDashboardProps {
 
 export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) {
   const [selectedPeriod, setSelectedPeriod] = useState("this_month");
+
+  const handleMapMarkerClick = (markerId: string) => {
+    // Hook up to your issue details flow if needed
+    console.log("Mandal map marker clicked:", markerId);
+  };
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -138,6 +144,16 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
           </div>
         </Card>
       </div>
+
+      {/* Mandal Map */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3>Mandal Issue Map</h3>
+        </div>
+        <div className="relative h-[500px]">
+          <CityMapView onMarkerClick={handleMapMarkerClick} />
+        </div>
+      </Card>
 
       {/* Issue Status Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

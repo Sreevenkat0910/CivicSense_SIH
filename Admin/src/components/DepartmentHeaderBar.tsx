@@ -43,23 +43,7 @@ export function DepartmentHeaderBar({
             />
           </div>
           
-          {/* Notifications */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onNotificationsClick}
-            className="relative"
-          >
-            <Bell className="w-5 h-5" />
-            {notificationCount > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-              >
-                {notificationCount}
-              </Badge>
-            )}
-          </Button>
+          {/* Notifications removed for Department Employee view */}
           
           {/* Profile + explicit Logout button */}
           <div className="flex items-center gap-2">
