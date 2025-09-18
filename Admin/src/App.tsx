@@ -6,6 +6,7 @@ import { MandalAdminHeaderBar } from "./components/MandalAdminHeaderBar";
 import { DashboardPage } from "./components/DashboardPage";
 import { IssuesPage } from "./components/IssuesPage";
 import { DepartmentDashboard } from "./components/DepartmentDashboard";
+import { HodDashboard } from "./components/HodDashboard";
 import { DepartmentEmployeeDashboard } from "./components/DepartmentEmployeeDashboard";
 import { MandalAdminDashboard } from "./components/MandalAdminDashboard";
 import { DepartmentManagement } from "./components/DepartmentManagement";
@@ -18,7 +19,7 @@ import { NotificationsPanel, Notification } from "./components/NotificationsPane
 import { Issue } from "./components/IssueTable";
 import { SchedulePage } from "./components/SchedulePage";
 import { MandalSchedulePage } from "./components/MandalSchedulePage";
-import { DepartmentEmployeeTasks } from "./components/DepartmentEmployeeTasks";
+import { MyTimetable } from "./components/MyTimetable";
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -49,7 +50,7 @@ export default function App() {
         setCurrentPage("department-employee");
         break;
       case "department":
-        setCurrentPage("department");
+        setCurrentPage("hod-dashboard");
         break;
       default:
         setCurrentPage("dashboard");
@@ -111,9 +112,16 @@ export default function App() {
         return <IssuesPage onIssueClick={handleIssueClick} />;
       case "department":
         return (
-          <DepartmentDashboard
-            onIssueClick={handleIssueClick}
-            userDepartment={userDepartment}
+          <HodDashboard
+            departmentName={userDepartment}
+            onNavigate={setCurrentPage}
+          />
+        );
+      case "hod-dashboard":
+        return (
+          <HodDashboard
+            departmentName={userDepartment}
+            onNavigate={setCurrentPage}
           />
         );
       case "department-employee":
@@ -157,6 +165,35 @@ export default function App() {
         return (
           <DepartmentEmployeeTasks userDepartment={userDepartment} userName={userName} />
         );
+      case "department-issues":
+        return (
+          <HodDashboard
+            departmentName={userDepartment}
+            onNavigate={setCurrentPage}
+          />
+        );
+      case "department-employees":
+        return (
+          <HodDashboard
+            departmentName={userDepartment}
+            onNavigate={setCurrentPage}
+          />
+        );
+      case "department-settings":
+        return (
+          <PlaceholderPage
+            title="Department Settings"
+            description="Configure department-specific parameters and policies"
+          />
+        );
+      case "my-timetable":
+        return (
+          <MyTimetable
+            userRole={userRole}
+            userName={userName}
+            userDepartment={userDepartment}
+          />
+        );
       case "settings":
         return (
           <PlaceholderPage
@@ -179,9 +216,9 @@ export default function App() {
         );
       case "department":
         return (
-          <DepartmentDashboard
-            onIssueClick={handleIssueClick}
-            userDepartment={userDepartment}
+          <HodDashboard
+            departmentName={userDepartment}
+            onNavigate={setCurrentPage}
           />
         );
       default:

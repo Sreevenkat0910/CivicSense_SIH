@@ -3,6 +3,7 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { CityMapView } from "./CityMapView";
+import { Issue } from "./IssueTable";
 import { 
   Building2,
   Users,
@@ -41,6 +42,43 @@ const recentActivity = [
   { type: "department_updated", description: "Traffic Department staff updated", time: "4 hours ago" },
   { type: "issue_spike", description: "High issue volume in Water Department", time: "6 hours ago" },
   { type: "user_role_changed", description: "Admin role assigned to Rajesh Kumar", time: "1 day ago" }
+];
+
+// Mock issues data for the map
+const mockIssues: Issue[] = [
+  {
+    id: "ISS-2024-001",
+    category: "Road Repair",
+    location: "Main Street, Karimnagar",
+    status: "open",
+    priority: "high",
+    dateReported: "2024-01-15",
+    assignedDept: "Public Works",
+    description: "Pothole on main street causing traffic issues",
+    reporter: "Local Resident"
+  },
+  {
+    id: "ISS-2024-002",
+    category: "Water Supply",
+    location: "Residential Area",
+    status: "in-progress",
+    priority: "medium",
+    dateReported: "2024-01-14",
+    assignedDept: "Water Department",
+    description: "Low water pressure in residential area",
+    reporter: "Community Member"
+  },
+  {
+    id: "ISS-2024-003",
+    category: "Street Lighting",
+    location: "Park Road",
+    status: "resolved",
+    priority: "low",
+    dateReported: "2024-01-10",
+    assignedDept: "Utilities",
+    description: "Street light not working",
+    reporter: "Evening Walker"
+  }
 ];
 
 interface MandalAdminDashboardProps {
@@ -151,7 +189,7 @@ export function MandalAdminDashboard({ onNavigate }: MandalAdminDashboardProps) 
           <h3>Mandal Issue Map</h3>
         </div>
         <div className="relative h-[500px]">
-          <CityMapView onMarkerClick={handleMapMarkerClick} />
+          <CityMapView onMarkerClick={handleMapMarkerClick} issues={mockIssues} />
         </div>
       </Card>
 
